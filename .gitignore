@@ -50,6 +50,11 @@ coverage/
 *.user
 *.userosscache
 
+# Secrets — never commit
+appsettings.Development.json
+appsettings.*.json
+!appsettings.json
+
 # Other
 *.DS_Store
 Thumbs.db
