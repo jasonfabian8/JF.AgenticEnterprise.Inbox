@@ -149,10 +149,76 @@ function orchestratorSublabel(
   return 'Awaiting'
 }
 
-function specializedAgentType(nextAgent: string | undefined): string | null {
+function specializedAgentType(
+  nextAgent: string | undefined,
+  executions: AgentExecutionDto[],
+): string | null {
   if (nextAgent === 'InvoiceAgent') return 'InvoiceAgent'
   if (nextAgent === 'ContractAgent') return 'ContractAgent'
+  // After human review, the orchestration decision stays as "HumanReview" but
+  // ContinueAfterReviewAsync may have run a specialized agent — detect it from executions.
+  if (executions.some(e => e.agentType === 'InvoiceAgent')) return 'InvoiceAgent'
+  if (executions.some(e => e.agentType === 'ContractAgent')) return 'ContractAgent'
   return null
+}
+
+// ── Graph section builders ────────────────────────────────────────────────────
+
+function buildHumanReviewSection(
+  specType: string | null,
+  orchStatus: NodeStatus,
+): { node: Node; edge: Edge } {
+  return {
+    node: {
+      id: 'human-review',
+      position: { x: 110, y: 390 },
+      type: 'agentNode',
+      data: {
+        label: 'Human Review',
+        sublabel: specType ? 'Approved' : undefined,
+        status: (specType ? 'completed' : 'idle') satisfies NodeStatus,
+      } satisfies AgentNodeData,
+    },
+    edge: {
+      id: 'e3',
+      source: 'orchestrator',
+      target: 'human-review',
+      type: 'smoothstep',
+      animated: orchStatus === 'running',
+      style: { stroke: '#d1d5db', strokeWidth: 1.5 },
+    },
+  }
+}
+
+function buildSpecializedSection(
+  specType: string,
+  specLabel: string,
+  specStatus: NodeStatus,
+  specExec: AgentExecutionDto | null | undefined,
+  fromNodeId: string,
+  yPos: number,
+): { node: Node; edge: Edge } {
+  return {
+    node: {
+      id: 'specialized',
+      position: { x: 110, y: yPos },
+      type: 'agentNode',
+      data: {
+        label: specLabel,
+        sublabel: specStatus === 'running' ? 'Processing…' : undefined,
+        status: specStatus,
+        confidence: specExec?.confidenceScore ?? undefined,
+      } satisfies AgentNodeData,
+    },
+    edge: {
+      id: fromNodeId === 'orchestrator' ? 'e3' : 'e4',
+      source: fromNodeId,
+      target: 'specialized',
+      type: 'smoothstep',
+      animated: specStatus === 'running',
+      style: { stroke: '#d1d5db', strokeWidth: 1.5 },
+    },
+  }
 }
 
 // ── Graph builder ─────────────────────────────────────────────────────────────
@@ -172,8 +238,8 @@ function buildGraph(
   const classExec   = executions.find(e => e.agentType === 'ClassificationAgent')
 
   const nextAgent   = decision?.nextAgent
-  const specLabel   = labelForNextAgent(nextAgent)
-  const specType    = specializedAgentType(nextAgent)
+  const specType    = specializedAgentType(nextAgent, executions)
+  const specLabel   = specType ? (NEXT_AGENT_LABELS[specType] ?? specType) : labelForNextAgent(nextAgent)
   const specStatus: NodeStatus = specType ? resolveStatus(executions, specType, liveRunning) : 'idle'
   const specExec    = specType ? executions.find(e => e.agentType === specType) : null
 
@@ -231,26 +297,24 @@ function buildGraph(
     },
   ]
 
-  if (specLabel && orchStatus !== 'idle') {
-    nodes.push({
-      id: 'specialized',
-      position: { x: 110, y: 390 },
-      type: 'agentNode',
-      data: {
-        label: specLabel,
-        sublabel: specStatus === 'running' ? 'Processing…' : undefined,
-        status: specStatus,
-        confidence: specExec?.confidenceScore ?? undefined,
-      } satisfies AgentNodeData,
-    })
-    edges.push({
-      id: 'e3',
-      source: 'orchestrator',
-      target: 'specialized',
-      type: 'smoothstep',
-      animated: specStatus === 'running',
-      style: { stroke: '#d1d5db', strokeWidth: 1.5 },
-    })
+  const routedToHumanReview = nextAgent === 'HumanReview'
+  let fromNodeId = 'orchestrator'
+  let specY = 390
+
+  if (routedToHumanReview && orchStatus !== 'idle') {
+    const { node, edge } = buildHumanReviewSection(specType, orchStatus)
+    nodes.push(node)
+    edges.push(edge)
+    fromNodeId = 'human-review'
+    specY = 520
+  }
+
+  if (specType && orchStatus !== 'idle') {
+    const { node, edge } = buildSpecializedSection(
+      specType, specLabel ?? specType, specStatus, specExec, fromNodeId, specY,
+    )
+    nodes.push(node)
+    edges.push(edge)
   }
 
   return { nodes, edges }

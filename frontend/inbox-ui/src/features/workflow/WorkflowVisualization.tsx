@@ -26,7 +26,7 @@ const STATUS_DOT: Record<string, string> = {
   failed:    'bg-red-500',
 }
 
-function Node({ node }: { node: WorkflowNode }) {
+function Node({ node }: Readonly<{ node: WorkflowNode }>) {
   const ringClass  = node.status ? (STATUS_RING[node.status] ?? '') : ''
   const typeClass  = TYPE_STYLES[node.type]
   const dotClass   = node.status ? (STATUS_DOT[node.status] ?? '') : null
@@ -34,11 +34,10 @@ function Node({ node }: { node: WorkflowNode }) {
   return (
     <div
       className={cn(
-        'relative flex flex-col items-center rounded-lg border px-4 py-2.5 text-center shadow-sm',
+        'relative flex flex-col items-center rounded-lg border px-4 py-2.5 text-center shadow-sm min-w-40',
         typeClass,
         ringClass,
       )}
-      style={{ minWidth: '160px' }}
     >
       {dotClass && (
         <span
@@ -81,13 +80,13 @@ export function WorkflowVisualization({
   agentStatus = 'pending',
   classificationCategory,
   classificationConfidence,
-}: Props) {
+}: Readonly<Props>) {
   const hasResult = agentStatus === 'completed' && classificationCategory
 
   const confidenceSuffix =
-    classificationConfidence != null
-      ? ` · ${Math.round(classificationConfidence * 100)}%`
-      : ''
+    classificationConfidence == null
+      ? ''
+      : ` · ${Math.round(classificationConfidence * 100)}%`
 
   return (
     <div className="flex flex-col items-center gap-0 py-2">
@@ -112,7 +111,7 @@ export function WorkflowVisualization({
           <Arrow />
           <Node
             node={{
-              label: classificationCategory!,
+              label: classificationCategory ?? '',
               sublabel: `Classified${confidenceSuffix}`,
               type: 'result',
               status: 'completed',

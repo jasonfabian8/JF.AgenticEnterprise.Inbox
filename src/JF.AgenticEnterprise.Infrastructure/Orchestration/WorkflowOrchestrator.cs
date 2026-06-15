@@ -168,16 +168,15 @@ public sealed class WorkflowOrchestrator : IWorkflowOrchestrator
             classification.Confidence,
             classification.Reasoning ?? string.Empty);
 
+        // Load WorkflowKnowledge once — used for override update and post-agent update below
+        var knowledge = await _knowledgeRepo.GetByWorkflowIdAsync(workflowId, ct);
+
         // Restore WorkflowKnowledge category if override was supplied
-        if (overrideCategory is not null)
+        if (overrideCategory is not null && knowledge is not null)
         {
-            var knowledge = await _knowledgeRepo.GetByWorkflowIdAsync(workflowId, ct);
-            if (knowledge is not null)
-            {
-                knowledge.CurrentCategory  = overrideCategory;
-                knowledge.UpdatedAt        = DateTimeOffset.UtcNow;
-                await _knowledgeRepo.UpdateAsync(knowledge, ct);
-            }
+            knowledge.CurrentCategory  = overrideCategory;
+            knowledge.UpdatedAt        = DateTimeOffset.UtcNow;
+            await _knowledgeRepo.UpdateAsync(knowledge, ct);
         }
 
         // Determine which specialized agent to run (non-extractable categories complete directly)
@@ -208,8 +207,20 @@ public sealed class WorkflowOrchestrator : IWorkflowOrchestrator
         {
             try
             {
-                var (id, _) = await RunInvoiceAgentAsync(workflow, email, attachmentContexts, ct);
+                var (id, invoiceResult) = await RunInvoiceAgentAsync(workflow, email, attachmentContexts, ct);
                 invoiceAnalysisId = id;
+
+                if (knowledge is not null)
+                {
+                    knowledge.RefinedCategory   = resolvedCategory;
+                    knowledge.RefinedConfidence = invoiceResult.Confidence;
+                    knowledge.RefinedReasoning  = invoiceResult.Summary;
+                    knowledge.CurrentCategory   = resolvedCategory;
+                    knowledge.CurrentConfidence = invoiceResult.Confidence;
+                    knowledge.CurrentReasoning  = invoiceResult.Summary;
+                    knowledge.UpdatedAt         = DateTimeOffset.UtcNow;
+                    await _knowledgeRepo.UpdateAsync(knowledge, ct);
+                }
             }
             catch (Exception ex)
             {
@@ -221,8 +232,21 @@ public sealed class WorkflowOrchestrator : IWorkflowOrchestrator
         {
             try
             {
-                var (id, _) = await RunContractAgentAsync(workflow, email, attachmentContexts, ct);
+                var (id, contractResult) = await RunContractAgentAsync(workflow, email, attachmentContexts, ct);
                 contractAnalysisId = id;
+
+                var specializedCategory = contractResult.ContractType ?? resolvedCategory;
+                if (knowledge is not null)
+                {
+                    knowledge.RefinedCategory   = specializedCategory;
+                    knowledge.RefinedConfidence = contractResult.Confidence;
+                    knowledge.RefinedReasoning  = contractResult.Reasoning;
+                    knowledge.CurrentCategory   = specializedCategory;
+                    knowledge.CurrentConfidence = contractResult.Confidence;
+                    knowledge.CurrentReasoning  = contractResult.Reasoning;
+                    knowledge.UpdatedAt         = DateTimeOffset.UtcNow;
+                    await _knowledgeRepo.UpdateAsync(knowledge, ct);
+                }
             }
             catch (Exception ex)
             {
@@ -631,6 +655,7 @@ public sealed class WorkflowOrchestrator : IWorkflowOrchestrator
         }, ct);
 
         execution.Status          = AgentExecutionStatus.Completed;
+        execution.ReasoningText   = result.Reasoning;
         execution.DurationMs      = durationMs;
         execution.CompletedAt     = DateTimeOffset.UtcNow;
         execution.OutputPayloadJson = JsonSerializer.Serialize(new
@@ -704,6 +729,7 @@ public sealed class WorkflowOrchestrator : IWorkflowOrchestrator
 
         execution.Status          = AgentExecutionStatus.Completed;
         execution.ConfidenceScore = result.Confidence;
+        execution.ReasoningText   = result.Summary ?? string.Empty;
         execution.DurationMs      = durationMs;
         execution.CompletedAt     = DateTimeOffset.UtcNow;
         execution.OutputPayloadJson = result.RawOutputJson;
@@ -775,6 +801,7 @@ public sealed class WorkflowOrchestrator : IWorkflowOrchestrator
 
         execution.Status          = AgentExecutionStatus.Completed;
         execution.ConfidenceScore = result.Confidence;
+        execution.ReasoningText   = result.Reasoning ?? string.Empty;
         execution.DurationMs      = durationMs;
         execution.CompletedAt     = DateTimeOffset.UtcNow;
         execution.OutputPayloadJson = result.RawOutputJson;

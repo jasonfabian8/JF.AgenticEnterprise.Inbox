@@ -43,6 +43,7 @@ export function EmailListPage() {
           )}
         </div>
         <select
+          aria-label="Filter by status"
           value={status}
           onChange={e => { setStatus(e.target.value); setPage(1) }}
           className="rounded-md border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
