@@ -22,6 +22,14 @@ public class WorkflowRepository : IWorkflowRepository
         return workflow.Id;
     }
 
+    public async Task<Workflow?> GetByIdAsync(string id, CancellationToken ct = default)
+    {
+        return await _context.Workflows
+            .Include(w => w.Steps.OrderBy(s => s.StepOrder))
+            .Include(w => w.AgentExecutions.OrderBy(a => a.StartedAt))
+            .FirstOrDefaultAsync(w => w.Id == id, ct);
+    }
+
     public async Task<Workflow?> GetByEmailIdAsync(string emailId, CancellationToken ct = default)
     {
         return await _context.Workflows
