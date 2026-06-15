@@ -39,7 +39,7 @@ public static class WorkflowEndpoints
                 a.Id, a.AgentType, a.AgentVersion, a.Status,
                 a.ConfidenceScore, a.ReasoningText,
                 a.DurationMs, a.StartedAt, a.CompletedAt,
-                a.ErrorMessage)).ToList());
+                a.ErrorMessage, a.OutputPayloadJson)).ToList());
 
         return Results.Ok(dto);
     }

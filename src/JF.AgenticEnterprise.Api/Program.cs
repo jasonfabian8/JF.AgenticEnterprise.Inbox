@@ -1,4 +1,7 @@
 using JF.AgenticEnterprise.Api.Endpoints;
+using JF.AgenticEnterprise.Api.Hubs;
+using JF.AgenticEnterprise.Api.SignalR;
+using JF.AgenticEnterprise.Application.SignalR;
 using JF.AgenticEnterprise.Infrastructure;
 using JF.AgenticEnterprise.Infrastructure.Persistence;
 using Serilog;
@@ -10,7 +13,7 @@ builder.Host.UseSerilog((ctx, cfg) => cfg
     .ReadFrom.Configuration(ctx.Configuration)
     .Enrich.FromLogContext());
 
-// ── Infrastructure ────────────────────────────────────────────────────────────
+// ── Infrastructure (EF, repositories, SK kernel, agents, orchestrator) ────────
 builder.Services.AddInfrastructure(builder.Configuration);
 
 // ── CORS ──────────────────────────────────────────────────────────────────────
@@ -21,16 +24,15 @@ builder.Services.AddCors(opts =>
         .AllowAnyMethod()
         .AllowCredentials()));
 
-// ── SignalR (stub — events wired in Sprint 1) ──────────────────────────────────
+// ── SignalR + event broadcaster ───────────────────────────────────────────────
 builder.Services.AddSignalR();
+builder.Services.AddScoped<IAgentEventBroadcaster, SignalRAgentEventBroadcaster>();
 
-// ── Health checks ─────────────────────────────────────────────────────────────
+// ── Health checks + Problem details ──────────────────────────────────────────
 builder.Services.AddHealthChecks();
-
-// ── Problem details ───────────────────────────────────────────────────────────
 builder.Services.AddProblemDetails();
 
-// ── JSON options ──────────────────────────────────────────────────────────────
+// ── JSON ──────────────────────────────────────────────────────────────────────
 builder.Services.ConfigureHttpJsonOptions(opts =>
 {
     opts.SerializerOptions.PropertyNamingPolicy =
@@ -55,9 +57,12 @@ app.UseCors();
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 
-// ── Endpoints ─────────────────────────────────────────────────────────────────
+// ── Endpoints + Hubs ─────────────────────────────────────────────────────────
 app.MapHealthChecks("/health");
+app.MapHub<InboxHub>("/hubs/inbox");
+
 app.MapEmailEndpoints();
 app.MapWorkflowEndpoints();
+app.MapWorkflowExecutionEndpoints();
 
 app.Run();

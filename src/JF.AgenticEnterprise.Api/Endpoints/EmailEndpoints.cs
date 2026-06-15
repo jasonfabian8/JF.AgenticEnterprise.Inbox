@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using JF.AgenticEnterprise.Application.DTOs;
+using JF.AgenticEnterprise.Application.Orchestration;
 using JF.AgenticEnterprise.Application.Repositories;
 using JF.AgenticEnterprise.Domain.Common;
 using JF.AgenticEnterprise.Domain.Entities;
@@ -33,9 +34,10 @@ public static class EmailEndpoints
 
     private static async Task<IResult> IngestEmail(
         [FromBody] IngestEmailRequest request,
-        IEmailRepository emailRepo,
-        IAuditRepository auditRepo,
-        CancellationToken ct)
+        IEmailRepository     emailRepo,
+        IAuditRepository     auditRepo,
+        IServiceScopeFactory scopeFactory,
+        CancellationToken    ct)
     {
         var receivedAt = request.ReceivedAt ?? DateTimeOffset.UtcNow;
         var idempotencyKey = ComputeSha256($"{request.SenderEmail}|{request.Subject}|{receivedAt:O}");
@@ -89,6 +91,14 @@ public static class EmailEndpoints
             Action     = AuditAction.EmailIngested,
             OccurredAt = now,
         }, ct);
+
+        // Trigger the agentic workflow in the background (new DI scope per execution)
+        _ = Task.Run(async () =>
+        {
+            await using var scope = scopeFactory.CreateAsyncScope();
+            var orchestrator = scope.ServiceProvider.GetRequiredService<IWorkflowOrchestrator>();
+            await orchestrator.StartForEmailAsync(emailId);
+        });
 
         return Results.Accepted(
             $"/api/v1/emails/{emailId}",
