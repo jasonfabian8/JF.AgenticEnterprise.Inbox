@@ -65,4 +65,9 @@ app.MapEmailEndpoints();
 app.MapWorkflowEndpoints();
 app.MapWorkflowExecutionEndpoints();
 
+// Sprint 3
+app.MapHumanReviewEndpoints();
+app.MapTaxonomyEndpoints();
+app.MapWorkflowReasoningEndpoints();
+
 app.Run();
