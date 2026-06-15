@@ -148,7 +148,7 @@ export function AgentEventProvider({ children }: Readonly<{ children: ReactNode 
     const connection = new signalR.HubConnectionBuilder()
       .withUrl('/hubs/inbox')
       .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
-      .configureLogging(signalR.LogLevel.Warning)
+      .configureLogging(signalR.LogLevel.None)
       .build()
 
     let cancelled = false

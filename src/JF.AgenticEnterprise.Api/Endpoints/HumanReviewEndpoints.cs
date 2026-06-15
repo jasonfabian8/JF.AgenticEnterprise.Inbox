@@ -6,6 +6,7 @@ using JF.AgenticEnterprise.Domain.Entities;
 using JF.AgenticEnterprise.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace JF.AgenticEnterprise.Api.Endpoints;
 
@@ -73,6 +74,7 @@ public static class HumanReviewEndpoints
         IWorkflowKnowledgeRepository knowledgeRepo,
         IAgentEventBroadcaster broadcaster,
         IWorkflowOrchestrator orchestrator,
+        IServiceScopeFactory scopeFactory,
         CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(request.Action))
@@ -134,11 +136,16 @@ public static class HumanReviewEndpoints
 
         if (isApproved)
         {
-            // Run the specialized agent (Invoice/Contract) and finalize
-            _ = Task.Run(() => orchestrator.ContinueAfterReviewAsync(
-                review.WorkflowId,
-                request.OverrideCategory,
-                CancellationToken.None), CancellationToken.None);
+            // Run the specialized agent in a new DI scope so the background task
+            // has its own DbContext that isn't disposed when the HTTP request ends.
+            var workflowId      = review.WorkflowId;
+            var overrideCategory = request.OverrideCategory;
+            _ = Task.Run(async () =>
+            {
+                await using var scope = scopeFactory.CreateAsyncScope();
+                var orch = scope.ServiceProvider.GetRequiredService<IWorkflowOrchestrator>();
+                await orch.ContinueAfterReviewAsync(workflowId, overrideCategory, CancellationToken.None);
+            });
         }
         else
         {
