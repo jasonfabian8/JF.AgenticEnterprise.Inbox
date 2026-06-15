@@ -38,18 +38,18 @@ public class WorkflowResult
     public string Summary { get; set; } = string.Empty;
 
     public DateTimeOffset CompletedAt { get; set; }
-    public DateTimeOffset CreatedAt   { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
 
     // ── Navigation ────────────────────────────────────────────────────────────
-    public Workflow          Workflow          { get; set; } = default!;
-    public InvoiceAnalysis?  InvoiceAnalysis   { get; set; }
-    public ContractAnalysis? ContractAnalysis  { get; set; }
+    public Workflow Workflow { get; set; } = default!;
+    public InvoiceAnalysis? InvoiceAnalysis { get; set; }
+    public ContractAnalysis? ContractAnalysis { get; set; }
 }
 
 public static class WorkflowResultStatus
 {
-    public const string Completed         = "COMPLETED";
-    public const string CompletedExtracted= "COMPLETED_EXTRACTED";
-    public const string AwaitingReview    = "AWAITING_REVIEW";
-    public const string Failed            = "FAILED";
+    public const string Completed = "COMPLETED";
+    public const string CompletedExtracted = "COMPLETED_EXTRACTED";
+    public const string AwaitingReview = "AWAITING_REVIEW";
+    public const string Failed = "FAILED";
 }

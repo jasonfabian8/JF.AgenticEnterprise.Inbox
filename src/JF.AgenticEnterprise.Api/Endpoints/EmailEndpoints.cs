@@ -1,11 +1,11 @@
-using System.Security.Cryptography;
-using System.Text;
 using JF.AgenticEnterprise.Application.DTOs;
 using JF.AgenticEnterprise.Application.Orchestration;
 using JF.AgenticEnterprise.Application.Repositories;
 using JF.AgenticEnterprise.Domain.Common;
 using JF.AgenticEnterprise.Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace JF.AgenticEnterprise.Api.Endpoints;
 
@@ -34,10 +34,10 @@ public static class EmailEndpoints
 
     private static async Task<IResult> IngestEmail(
         [FromBody] IngestEmailRequest request,
-        IEmailRepository     emailRepo,
-        IAuditRepository     auditRepo,
+        IEmailRepository emailRepo,
+        IAuditRepository auditRepo,
         IServiceScopeFactory scopeFactory,
-        CancellationToken    ct)
+        CancellationToken ct)
     {
         var receivedAt = request.ReceivedAt ?? DateTimeOffset.UtcNow;
         var idempotencyKey = ComputeSha256($"{request.SenderEmail}|{request.Subject}|{receivedAt:O}");
@@ -45,36 +45,36 @@ public static class EmailEndpoints
         if (await emailRepo.ExistsByIdempotencyKeyAsync(idempotencyKey, ct))
             return Results.Conflict(new { error = "Duplicate email — already ingested." });
 
-        var now  = DateTimeOffset.UtcNow;
+        var now = DateTimeOffset.UtcNow;
         var emailId = UlidGenerator.NewUlid();
 
         var email = new Email
         {
-            Id             = emailId,
+            Id = emailId,
             IdempotencyKey = idempotencyKey,
-            Source         = "MANUAL_UPLOAD",
-            SenderEmail    = request.SenderEmail,
-            SenderName     = request.SenderName ?? string.Empty,
-            Subject        = request.Subject,
-            BodyPlainText  = request.BodyPlainText,
-            BodyHtml       = request.BodyHtml ?? string.Empty,
-            ReceivedAt     = receivedAt,
-            IngestedAt     = now,
-            Status         = EmailStatus.Queued,
-            CreatedAt      = now,
+            Source = "MANUAL_UPLOAD",
+            SenderEmail = request.SenderEmail,
+            SenderName = request.SenderName ?? string.Empty,
+            Subject = request.Subject,
+            BodyPlainText = request.BodyPlainText,
+            BodyHtml = request.BodyHtml ?? string.Empty,
+            ReceivedAt = receivedAt,
+            IngestedAt = now,
+            Status = EmailStatus.Queued,
+            CreatedAt = now,
         };
 
         foreach (var a in request.Attachments ?? [])
         {
             email.Attachments.Add(new Attachment
             {
-                Id          = UlidGenerator.NewUlid(),
-                EmailId     = emailId,
-                Filename    = a.Filename,
-                MimeType    = a.MimeType,
-                SizeBytes   = a.SizeBytes,
+                Id = UlidGenerator.NewUlid(),
+                EmailId = emailId,
+                Filename = a.Filename,
+                MimeType = a.MimeType,
+                SizeBytes = a.SizeBytes,
                 StoragePath = $"attachments/{emailId}/{a.Filename}",
-                CreatedAt   = now,
+                CreatedAt = now,
             });
         }
 
@@ -82,13 +82,13 @@ public static class EmailEndpoints
 
         await auditRepo.AppendAsync(new AuditEntry
         {
-            Id         = UlidGenerator.NewUlid(),
-            EmailId    = emailId,
+            Id = UlidGenerator.NewUlid(),
+            EmailId = emailId,
             EntityType = nameof(Email),
-            EntityId   = emailId,
-            ActorType  = AuditActorType.System,
-            ActorId    = "api",
-            Action     = AuditAction.EmailIngested,
+            EntityId = emailId,
+            ActorType = AuditActorType.System,
+            ActorId = "api",
+            Action = AuditAction.EmailIngested,
             OccurredAt = now,
         }, ct);
 
@@ -109,31 +109,31 @@ public static class EmailEndpoints
 
     private static async Task<IResult> GetEmails(
         IEmailRepository emailRepo,
-        int page         = 1,
-        int pageSize     = 20,
-        string? status   = null,
+        int page = 1,
+        int pageSize = 20,
+        string? status = null,
         string? categoryType = null,
         CancellationToken ct = default)
     {
-        page     = Math.Max(1, page);
+        page = Math.Max(1, page);
         pageSize = Math.Clamp(pageSize, 1, 100);
 
         var (items, total) = await emailRepo.GetPagedAsync(page, pageSize, status, categoryType, ct);
 
         var dtos = items.Select(e => new EmailListItemDto(
-            Id:                   e.Id,
-            SenderEmail:          e.SenderEmail,
-            SenderName:           e.SenderName,
-            Subject:              e.Subject,
-            Status:               e.Status,
-            CategoryType:         e.Classification?.CategoryType,
-            Confidence:           e.Classification?.Confidence,
-            AttachmentCount:      e.Attachments.Count,
-            ReceivedAt:           e.ReceivedAt,
-            ProcessedAt:          e.ProcessedAt,
+            Id: e.Id,
+            SenderEmail: e.SenderEmail,
+            SenderName: e.SenderName,
+            Subject: e.Subject,
+            Status: e.Status,
+            CategoryType: e.Classification?.CategoryType,
+            Confidence: e.Classification?.Confidence,
+            AttachmentCount: e.Attachments.Count,
+            ReceivedAt: e.ReceivedAt,
+            ProcessedAt: e.ProcessedAt,
             ProcessingDurationMs: e.ProcessingDurationMs,
-            HasConflict:          e.HasConflict,
-            HumanReviewed:        e.HumanReviewed
+            HasConflict: e.HasConflict,
+            HumanReviewed: e.HumanReviewed
         )).ToList();
 
         return Results.Ok(new EmailListResponse(dtos, total, page, pageSize));
@@ -150,19 +150,19 @@ public static class EmailEndpoints
         if (email is null) return Results.NotFound();
 
         var dto = new EmailDetailDto(
-            Id:                   email.Id,
-            SenderEmail:          email.SenderEmail,
-            SenderName:           email.SenderName,
-            Subject:              email.Subject,
-            BodyPlainText:        email.BodyPlainText,
-            BodyHtml:             email.BodyHtml,
-            Status:               email.Status,
-            ReceivedAt:           email.ReceivedAt,
-            IngestedAt:           email.IngestedAt,
-            ProcessedAt:          email.ProcessedAt,
+            Id: email.Id,
+            SenderEmail: email.SenderEmail,
+            SenderName: email.SenderName,
+            Subject: email.Subject,
+            BodyPlainText: email.BodyPlainText,
+            BodyHtml: email.BodyHtml,
+            Status: email.Status,
+            ReceivedAt: email.ReceivedAt,
+            IngestedAt: email.IngestedAt,
+            ProcessedAt: email.ProcessedAt,
             ProcessingDurationMs: email.ProcessingDurationMs,
-            HasConflict:          email.HasConflict,
-            HumanReviewed:        email.HumanReviewed,
+            HasConflict: email.HasConflict,
+            HumanReviewed: email.HumanReviewed,
             Classification: email.Classification is null ? null : new ClassificationDto(
                 email.Classification.CategoryType,
                 email.Classification.Confidence,
@@ -197,12 +197,41 @@ public static class EmailEndpoints
                 email.ContractExtraction.GoverningLaw,
                 email.ContractExtraction.OverallConfidence,
                 email.ContractExtraction.RiskFlags.Select(f =>
-                    new RiskFlagDto(f.FlagType, f.Severity, f.Excerpt, f.Confidence)).ToList()));
+                    new RiskFlagDto(f.FlagType, f.Severity, f.Excerpt, f.Confidence)).ToList()),
+            // Sprint 2 — agent-based analysis results
+            InvoiceAnalysis: email.InvoiceAnalysis is null ? null : new InvoiceAnalysisDto(
+                email.InvoiceAnalysis.Id,
+                email.InvoiceAnalysis.Supplier,
+                email.InvoiceAnalysis.InvoiceNumber,
+                email.InvoiceAnalysis.InvoiceDate,
+                email.InvoiceAnalysis.DueDate,
+                email.InvoiceAnalysis.Currency,
+                email.InvoiceAnalysis.TotalAmount,
+                email.InvoiceAnalysis.Confidence,
+                email.InvoiceAnalysis.Summary ?? string.Empty,
+                email.InvoiceAnalysis.CreatedAt),
+            ContractAnalysis: email.ContractAnalysis is null ? null
+                : MapContractAnalysisDto(email.ContractAnalysis));
 
         return Results.Ok(dto);
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────
+
+    private static ContractAnalysisDto MapContractAnalysisDto(Domain.Entities.ContractAnalysis ca)
+    {
+        static List<string> ParseList(string json)
+        {
+            try { return System.Text.Json.JsonSerializer.Deserialize<List<string>>(json) ?? []; }
+            catch { return []; }
+        }
+        return new ContractAnalysisDto(
+            ca.Id, ca.ContractType,
+            ParseList(ca.PartiesJson),
+            ca.EffectiveDate, ca.ExpirationDate, ca.RenewalClause,
+            ParseList(ca.KeyObligationsJson),
+            ca.Confidence, ca.Reasoning, ca.CreatedAt);
+    }
 
     private static string ComputeSha256(string input)
     {

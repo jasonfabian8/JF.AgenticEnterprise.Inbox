@@ -16,20 +16,20 @@ public class RiskFlag
 
 public static class RiskFlagSeverity
 {
-    public const string High   = "HIGH";
+    public const string High = "HIGH";
     public const string Medium = "MEDIUM";
-    public const string Low    = "LOW";
+    public const string Low = "LOW";
 }
 
 public static class RiskFlagType
 {
-    public const string AutoRenewalShortNotice      = "AUTO_RENEWAL_SHORT_NOTICE";
-    public const string LiabilityCapBelowThreshold  = "LIABILITY_CAP_BELOW_THRESHOLD";
-    public const string UncappedLiability           = "UNCAPPED_LIABILITY";
-    public const string BroadIndemnification        = "BROAD_INDEMNIFICATION";
-    public const string IpOwnershipTransfer         = "IP_OWNERSHIP_TRANSFER";
-    public const string NonCompeteClause            = "NON_COMPETE_CLAUSE";
-    public const string UnilateralTermination       = "UNILATERAL_TERMINATION";
-    public const string GoverningLawForeign         = "GOVERNING_LAW_FOREIGN";
-    public const string ExclusivityClause           = "EXCLUSIVITY_CLAUSE";
+    public const string AutoRenewalShortNotice = "AUTO_RENEWAL_SHORT_NOTICE";
+    public const string LiabilityCapBelowThreshold = "LIABILITY_CAP_BELOW_THRESHOLD";
+    public const string UncappedLiability = "UNCAPPED_LIABILITY";
+    public const string BroadIndemnification = "BROAD_INDEMNIFICATION";
+    public const string IpOwnershipTransfer = "IP_OWNERSHIP_TRANSFER";
+    public const string NonCompeteClause = "NON_COMPETE_CLAUSE";
+    public const string UnilateralTermination = "UNILATERAL_TERMINATION";
+    public const string GoverningLawForeign = "GOVERNING_LAW_FOREIGN";
+    public const string ExclusivityClause = "EXCLUSIVITY_CLAUSE";
 }

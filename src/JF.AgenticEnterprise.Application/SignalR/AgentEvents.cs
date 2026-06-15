@@ -13,7 +13,7 @@ public sealed record AgentCompletedEvent(
     string Agent,
     string EmailId,
     string Category,
-    float  Confidence,
+    float Confidence,
     string Reasoning,
     DateTimeOffset Timestamp);
 

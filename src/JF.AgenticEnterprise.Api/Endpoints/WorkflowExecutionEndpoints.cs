@@ -31,9 +31,9 @@ public static class WorkflowExecutionEndpoints
     private static async Task<IResult> ExecuteWorkflow(
         string workflowId,
         IWorkflowOrchestrator orchestrator,
-        IWorkflowRepository   workflowRepo,
-        IServiceScopeFactory  scopeFactory,
-        CancellationToken     ct)
+        IWorkflowRepository workflowRepo,
+        IServiceScopeFactory scopeFactory,
+        CancellationToken ct)
     {
         var workflow = await workflowRepo.GetByIdAsync(workflowId, ct);
         if (workflow is null) return Results.NotFound();
@@ -54,9 +54,9 @@ public static class WorkflowExecutionEndpoints
 
     private static async Task<IResult> GetExecutions(
         string workflowId,
-        IWorkflowRepository       workflowRepo,
+        IWorkflowRepository workflowRepo,
         IAgentExecutionRepository executionRepo,
-        CancellationToken         ct)
+        CancellationToken ct)
     {
         var workflow = await workflowRepo.GetByIdAsync(workflowId, ct);
         if (workflow is null) return Results.NotFound();
@@ -75,20 +75,20 @@ public static class WorkflowExecutionEndpoints
     // ── GET /api/v1/workflows/{workflowId}/status ─────────────────────────────
 
     private static async Task<IResult> GetStatus(
-        string              workflowId,
+        string workflowId,
         IWorkflowRepository workflowRepo,
-        CancellationToken   ct)
+        CancellationToken ct)
     {
         var workflow = await workflowRepo.GetByIdAsync(workflowId, ct);
         if (workflow is null) return Results.NotFound();
 
         return Results.Ok(new WorkflowStatusDto(
-            WorkflowId:  workflow.Id,
-            EmailId:     workflow.EmailId,
-            Status:      workflow.Status,
+            WorkflowId: workflow.Id,
+            EmailId: workflow.EmailId,
+            Status: workflow.Status,
             CurrentStep: workflow.CurrentStep,
             OutcomeType: workflow.OutcomeType,
-            StartedAt:   workflow.StartedAt,
+            StartedAt: workflow.StartedAt,
             CompletedAt: workflow.CompletedAt));
     }
 }

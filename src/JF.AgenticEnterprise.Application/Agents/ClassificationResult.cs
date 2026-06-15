@@ -7,13 +7,13 @@ public sealed record ClassificationResult(
 
 public static class EmailCategory
 {
-    public const string Invoice            = "Invoice";
-    public const string Contract           = "Contract";
+    public const string Invoice = "Invoice";
+    public const string Contract = "Contract";
     public const string CommercialProposal = "Commercial Proposal";
     public const string InformationRequest = "Information Request";
-    public const string Marketing          = "Marketing";
-    public const string BankStatement      = "Bank Statement";
-    public const string Unknown            = "Unknown";
+    public const string Marketing = "Marketing";
+    public const string BankStatement = "Bank Statement";
+    public const string Unknown = "Unknown";
 
     public static readonly IReadOnlyList<string> All =
     [

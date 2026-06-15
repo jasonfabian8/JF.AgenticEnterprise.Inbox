@@ -16,8 +16,8 @@ public sealed class AzureAIFoundryAgentRuntime : IAgentRuntime
     private readonly ILogger<AzureAIFoundryAgentRuntime> _logger;
 
     public AzureAIFoundryAgentRuntime(
-        AiProviderOptions                     options,
-        ILogger<AzureAIFoundryAgentRuntime>   logger)
+        AiProviderOptions options,
+        ILogger<AzureAIFoundryAgentRuntime> logger)
     {
         if (string.IsNullOrWhiteSpace(options.Endpoint))
             throw new InvalidOperationException(
@@ -39,9 +39,9 @@ public sealed class AzureAIFoundryAgentRuntime : IAgentRuntime
     /// <inheritdoc />
     public async Task<AgentRuntimeResponse> InvokeAsync(
         AgentRuntimeRequest request,
-        CancellationToken   ct = default)
+        CancellationToken ct = default)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(request.AgentId,    nameof(request.AgentId));
+        ArgumentException.ThrowIfNullOrWhiteSpace(request.AgentId, nameof(request.AgentId));
         ArgumentException.ThrowIfNullOrWhiteSpace(request.UserMessage, nameof(request.UserMessage));
 
         var started = DateTimeOffset.UtcNow;
@@ -52,7 +52,7 @@ public sealed class AzureAIFoundryAgentRuntime : IAgentRuntime
 
         var options = new ChatCompletionsOptions
         {
-            Model    = request.AgentId,
+            Model = request.AgentId,
             Messages =
             {
                 new ChatRequestSystemMessage(request.SystemPrompt),
@@ -73,8 +73,8 @@ public sealed class AzureAIFoundryAgentRuntime : IAgentRuntime
             throw new AgentInvocationException(request.AgentId, rfex.Status, rfex.Message, rfex);
         }
 
-        var latency      = DateTimeOffset.UtcNow - started;
-        var completions  = response.Value;
+        var latency = DateTimeOffset.UtcNow - started;
+        var completions = response.Value;
 
         var content = completions.Content
             ?? throw new AgentInvocationException(
@@ -82,7 +82,7 @@ public sealed class AzureAIFoundryAgentRuntime : IAgentRuntime
                 "Agent returned null content. Check the agent configuration in Foundry.");
 
         var usage = new AgentRuntimeUsage(
-            PromptTokens:     completions.Usage?.PromptTokens     ?? 0,
+            PromptTokens: completions.Usage?.PromptTokens ?? 0,
             CompletionTokens: completions.Usage?.CompletionTokens ?? 0);
 
         _logger.LogInformation(
@@ -90,10 +90,10 @@ public sealed class AzureAIFoundryAgentRuntime : IAgentRuntime
             request.AgentId, (int)latency.TotalMilliseconds, usage.TotalTokens);
 
         return new AgentRuntimeResponse(
-            Content:      content,
+            Content: content,
             FinishReason: completions.FinishReason?.ToString(),
-            Usage:        usage,
-            Latency:      latency);
+            Usage: usage,
+            Latency: latency);
     }
 }
 
@@ -103,13 +103,13 @@ public sealed class AzureAIFoundryAgentRuntime : IAgentRuntime
 /// </summary>
 public sealed class AgentInvocationException : Exception
 {
-    public string AgentId    { get; }
-    public int    HttpStatus { get; }
+    public string AgentId { get; }
+    public int HttpStatus { get; }
 
     public AgentInvocationException(string agentId, int httpStatus, string message, Exception? inner = null)
         : base($"Agent '{agentId}' invocation failed (HTTP {httpStatus}): {message}", inner)
     {
-        AgentId    = agentId;
+        AgentId = agentId;
         HttpStatus = httpStatus;
     }
 }

@@ -9,7 +9,7 @@ public interface IDocumentExtractionService
 {
     Task<DocumentExtractionResponse> ExtractAsync(
         DocumentExtractionRequest request,
-        CancellationToken         ct = default);
+        CancellationToken ct = default);
 }
 
 public sealed record DocumentExtractionRequest(
@@ -17,27 +17,27 @@ public sealed record DocumentExtractionRequest(
     IReadOnlyList<AttachmentExtractionItem> Attachments);
 
 public sealed record AttachmentExtractionItem(
-    string  AttachmentId,
-    string  Filename,
-    string  MimeType,
-    string  StoragePath,
+    string AttachmentId,
+    string Filename,
+    string MimeType,
+    string StoragePath,
     string? AlreadyExtractedText);
 
 public sealed record DocumentExtractionResponse(
     IReadOnlyList<ExtractedAttachment> Results);
 
 public sealed record ExtractedAttachment(
-    string  AttachmentId,
-    string  Filename,
-    string  MimeType,
+    string AttachmentId,
+    string Filename,
+    string MimeType,
     string? ExtractedText,
-    string  ExtractionStatus);
+    string ExtractionStatus);
 
 public static class ExtractionStatus
 {
-    public const string Extracted    = "EXTRACTED";
-    public const string AlreadyHad   = "ALREADY_HAD";
-    public const string Unsupported  = "UNSUPPORTED";
+    public const string Extracted = "EXTRACTED";
+    public const string AlreadyHad = "ALREADY_HAD";
+    public const string Unsupported = "UNSUPPORTED";
     public const string NoAttachment = "NO_ATTACHMENT";
-    public const string Failed       = "FAILED";
+    public const string Failed = "FAILED";
 }

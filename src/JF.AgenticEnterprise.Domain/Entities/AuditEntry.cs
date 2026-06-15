@@ -19,21 +19,21 @@ public class AuditEntry
 
 public static class AuditActorType
 {
-    public const string Agent  = "AGENT";
-    public const string Human  = "HUMAN";
+    public const string Agent = "AGENT";
+    public const string Human = "HUMAN";
     public const string System = "SYSTEM";
 }
 
 public static class AuditAction
 {
-    public const string EmailIngested              = "EMAIL_INGESTED";
-    public const string WorkflowStarted           = "WORKFLOW_STARTED";
-    public const string WorkflowCompleted         = "WORKFLOW_COMPLETED";
-    public const string ClassificationOverridden  = "CLASSIFICATION_OVERRIDDEN";
-    public const string ReviewDecided             = "REVIEW_DECIDED";
-    public const string FieldCorrected            = "FIELD_CORRECTED";
-    public const string TaxonomyCategoryCreated   = "TAXONOMY_CATEGORY_CREATED";
-    public const string TaxonomyProposalApproved  = "TAXONOMY_PROPOSAL_APPROVED";
+    public const string EmailIngested = "EMAIL_INGESTED";
+    public const string WorkflowStarted = "WORKFLOW_STARTED";
+    public const string WorkflowCompleted = "WORKFLOW_COMPLETED";
+    public const string ClassificationOverridden = "CLASSIFICATION_OVERRIDDEN";
+    public const string ReviewDecided = "REVIEW_DECIDED";
+    public const string FieldCorrected = "FIELD_CORRECTED";
+    public const string TaxonomyCategoryCreated = "TAXONOMY_CATEGORY_CREATED";
+    public const string TaxonomyProposalApproved = "TAXONOMY_PROPOSAL_APPROVED";
     public const string TaxonomyProposalDismissed = "TAXONOMY_PROPOSAL_DISMISSED";
-    public const string EmailReclassified         = "EMAIL_RECLASSIFIED";
+    public const string EmailReclassified = "EMAIL_RECLASSIFIED";
 }

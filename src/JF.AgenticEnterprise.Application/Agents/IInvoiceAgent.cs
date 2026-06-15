@@ -4,7 +4,7 @@ public interface IInvoiceAgent
 {
     Task<InvoiceAnalysisResult> ExtractAsync(
         InvoiceExtractionRequest request,
-        CancellationToken        ct = default);
+        CancellationToken ct = default);
 }
 
 public sealed record InvoiceExtractionRequest(
@@ -15,17 +15,17 @@ public sealed record InvoiceExtractionRequest(
     IReadOnlyList<AttachmentContext> Attachments);
 
 public sealed record InvoiceAnalysisResult(
-    string?  Supplier,
-    string?  InvoiceNumber,
-    string?  InvoiceDate,
-    string?  DueDate,
-    string?  Currency,
+    string? Supplier,
+    string? InvoiceNumber,
+    string? InvoiceDate,
+    string? DueDate,
+    string? Currency,
     decimal? TotalAmount,
-    float    Confidence,
-    string   Summary,
-    string   RawOutputJson);
+    float Confidence,
+    string Summary,
+    string RawOutputJson);
 
 public sealed record AttachmentContext(
-    string  Filename,
-    string  MimeType,
+    string Filename,
+    string MimeType,
     string? ExtractedText);

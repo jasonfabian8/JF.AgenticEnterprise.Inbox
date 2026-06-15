@@ -1,6 +1,6 @@
-using System.Text.Json;
 using JF.AgenticEnterprise.Application.Agents;
 using Microsoft.Extensions.Logging;
+using System.Text.Json;
 
 namespace JF.AgenticEnterprise.Infrastructure.Agents;
 
@@ -10,8 +10,8 @@ namespace JF.AgenticEnterprise.Infrastructure.Agents;
 /// </summary>
 public sealed class ClassificationAgent : IClassificationAgent
 {
-    private readonly IAgentRuntime                _runtime;
-    private readonly string                       _agentId;
+    private readonly IAgentRuntime _runtime;
+    private readonly string _agentId;
     private readonly ILogger<ClassificationAgent> _logger;
 
     private const string SystemPrompt = """
@@ -41,27 +41,27 @@ public sealed class ClassificationAgent : IClassificationAgent
         """;
 
     public ClassificationAgent(
-        IAgentRuntime                 runtime,
-        AiProviderOptions             options,
-        ILogger<ClassificationAgent>  logger)
+        IAgentRuntime runtime,
+        AiProviderOptions options,
+        ILogger<ClassificationAgent> logger)
     {
         _runtime = runtime;
         _agentId = options.ClassificationAgentId;
-        _logger  = logger;
+        _logger = logger;
     }
 
     /// <inheritdoc />
     public async Task<ClassificationResult> ClassifyAsync(
-        string            subject,
-        string            bodyPlainText,
+        string subject,
+        string bodyPlainText,
         CancellationToken ct = default)
     {
         var userMessage = BuildUserMessage(subject, bodyPlainText);
 
         var request = new AgentRuntimeRequest(
-            AgentId:      _agentId,
+            AgentId: _agentId,
             SystemPrompt: SystemPrompt,
-            UserMessage:  userMessage);
+            UserMessage: userMessage);
 
         _logger.LogDebug(
             "ClassificationAgent invoking agent {AgentId} for subject: {Subject}",
@@ -102,22 +102,22 @@ public sealed class ClassificationAgent : IClassificationAgent
                 $"Agent returned malformed JSON. Raw content: {json}", ex);
         }
 
-        if (!root.TryGetProperty("category",   out var catProp)   ||
-            !root.TryGetProperty("confidence",  out var confProp)  ||
-            !root.TryGetProperty("reasoning",   out var reasonProp))
+        if (!root.TryGetProperty("category", out var catProp) ||
+            !root.TryGetProperty("confidence", out var confProp) ||
+            !root.TryGetProperty("reasoning", out var reasonProp))
         {
             throw new InvalidOperationException(
                 $"Agent response is missing required fields (category/confidence/reasoning). Raw: {json}");
         }
 
-        var category   = catProp.GetString()            ?? EmailCategory.Unknown;
+        var category = catProp.GetString() ?? EmailCategory.Unknown;
         var confidence = (float)confProp.GetDouble();
-        var reasoning  = reasonProp.GetString()         ?? string.Empty;
+        var reasoning = reasonProp.GetString() ?? string.Empty;
 
         // Normalise hallucinated categories to Unknown
         if (!EmailCategory.All.Contains(category, StringComparer.OrdinalIgnoreCase))
         {
-            category   = EmailCategory.Unknown;
+            category = EmailCategory.Unknown;
             confidence = Math.Min(confidence, 0.3f);
         }
 

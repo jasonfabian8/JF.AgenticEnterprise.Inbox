@@ -25,19 +25,19 @@ public class AgentExecution
 
 public static class AgentExecutionStatus
 {
-    public const string Pending   = "PENDING";
-    public const string Running   = "RUNNING";
+    public const string Pending = "PENDING";
+    public const string Running = "RUNNING";
     public const string Completed = "COMPLETED";
-    public const string Failed    = "FAILED";
+    public const string Failed = "FAILED";
 }
 
 public static class AgentTypes
 {
-    public const string Orchestrator        = "OrchestratorAgent";
-    public const string Classification      = "ClassificationAgent";
+    public const string Orchestrator = "OrchestratorAgent";
+    public const string Classification = "ClassificationAgent";
     public const string DocumentUnderstanding = "DocumentUnderstandingAgent";
-    public const string Invoice             = "InvoiceAgent";
-    public const string Contract            = "ContractAgent";
-    public const string TaxonomyEvolution   = "TaxonomyEvolutionAgent";
-    public const string HumanCollaboration  = "HumanCollaborationAgent";
+    public const string Invoice = "InvoiceAgent";
+    public const string Contract = "ContractAgent";
+    public const string TaxonomyEvolution = "TaxonomyEvolutionAgent";
+    public const string HumanCollaboration = "HumanCollaborationAgent";
 }

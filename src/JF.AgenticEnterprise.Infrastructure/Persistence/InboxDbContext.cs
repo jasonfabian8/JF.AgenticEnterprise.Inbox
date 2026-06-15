@@ -8,6 +8,7 @@ public class InboxDbContext : DbContext
 {
     public InboxDbContext(DbContextOptions<InboxDbContext> options) : base(options) { }
 
+    // ── Sprint 1 ──────────────────────────────────────────────────────────────
     public DbSet<Email> Emails => Set<Email>();
     public DbSet<Attachment> Attachments => Set<Attachment>();
     public DbSet<Workflow> Workflows => Set<Workflow>();
@@ -22,6 +23,12 @@ public class InboxDbContext : DbContext
     public DbSet<TaxonomyCandidate> TaxonomyCandidates => Set<TaxonomyCandidate>();
     public DbSet<HumanReview> HumanReviews => Set<HumanReview>();
     public DbSet<AuditEntry> AuditEntries => Set<AuditEntry>();
+
+    // ── Sprint 2 ──────────────────────────────────────────────────────────────
+    public DbSet<OrchestrationDecision> OrchestrationDecisions => Set<OrchestrationDecision>();
+    public DbSet<InvoiceAnalysis> InvoiceAnalyses => Set<InvoiceAnalysis>();
+    public DbSet<ContractAnalysis> ContractAnalyses => Set<ContractAnalysis>();
+    public DbSet<WorkflowResult> WorkflowResults => Set<WorkflowResult>();
 
     // Store all DateTimeOffset values as INTEGER (Unix ms) so SQLite can sort/filter them.
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
@@ -38,6 +45,7 @@ public class InboxDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
         ConfigureEmail(modelBuilder);
         ConfigureWorkflow(modelBuilder);
         ConfigureAgentExecution(modelBuilder);
@@ -46,7 +54,15 @@ public class InboxDbContext : DbContext
         ConfigureTaxonomy(modelBuilder);
         ConfigureHumanReview(modelBuilder);
         ConfigureAuditEntry(modelBuilder);
+
+        // Sprint 2
+        ConfigureOrchestrationDecision(modelBuilder);
+        ConfigureInvoiceAnalysis(modelBuilder);
+        ConfigureContractAnalysis(modelBuilder);
+        ConfigureWorkflowResult(modelBuilder);
     }
+
+    // ── Sprint 1 configurations (unchanged) ──────────────────────────────────
 
     private static void ConfigureEmail(ModelBuilder m)
     {
@@ -101,6 +117,17 @@ public class InboxDbContext : DbContext
              .WithOne(x => x.Email)
              .HasForeignKey(x => x.EmailId)
              .OnDelete(DeleteBehavior.SetNull);
+
+            // Sprint 2: inverse side of InvoiceAnalysis / ContractAnalysis
+            e.HasOne(x => x.InvoiceAnalysis)
+             .WithOne(x => x.Email)
+             .HasForeignKey<InvoiceAnalysis>(x => x.EmailId)
+             .OnDelete(DeleteBehavior.Cascade);
+
+            e.HasOne(x => x.ContractAnalysis)
+             .WithOne(x => x.Email)
+             .HasForeignKey<ContractAnalysis>(x => x.EmailId)
+             .OnDelete(DeleteBehavior.Cascade);
         });
 
         m.Entity<Attachment>(e =>
@@ -123,7 +150,6 @@ public class InboxDbContext : DbContext
              .HasForeignKey(x => x.WorkflowId)
              .OnDelete(DeleteBehavior.Cascade);
 
-            // AgentExecutions owned by Email cascade; Workflow side is Restrict to avoid cycle
             e.HasMany(x => x.AgentExecutions)
              .WithOne(x => x.Workflow)
              .HasForeignKey(x => x.WorkflowId)
@@ -266,6 +292,97 @@ public class InboxDbContext : DbContext
             e.HasIndex(x => new { x.EmailId, x.OccurredAt });
             e.HasIndex(x => new { x.EntityType, x.EntityId });
             e.HasIndex(x => x.OccurredAt);
+        });
+    }
+
+    // ── Sprint 2 configurations ───────────────────────────────────────────────
+
+    private static void ConfigureOrchestrationDecision(ModelBuilder m)
+    {
+        m.Entity<OrchestrationDecision>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.HasIndex(x => x.WorkflowId).IsUnique();
+
+            e.HasOne(x => x.Workflow)
+             .WithOne(x => x.OrchestrationDecision)
+             .HasForeignKey<OrchestrationDecision>(x => x.WorkflowId)
+             .OnDelete(DeleteBehavior.Cascade);
+
+            e.HasOne(x => x.AgentExecution)
+             .WithMany()
+             .HasForeignKey(x => x.AgentExecutionId)
+             .OnDelete(DeleteBehavior.Restrict);
+        });
+    }
+
+    private static void ConfigureInvoiceAnalysis(ModelBuilder m)
+    {
+        m.Entity<InvoiceAnalysis>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.HasIndex(x => x.EmailId).IsUnique();
+            e.HasIndex(x => x.WorkflowId).IsUnique();
+
+            // Email relationship is configured on the Email side (ConfigureEmail)
+
+            e.HasOne(x => x.Workflow)
+             .WithOne(x => x.InvoiceAnalysis)
+             .HasForeignKey<InvoiceAnalysis>(x => x.WorkflowId)
+             .OnDelete(DeleteBehavior.Restrict);
+
+            e.HasOne(x => x.AgentExecution)
+             .WithMany()
+             .HasForeignKey(x => x.AgentExecutionId)
+             .OnDelete(DeleteBehavior.Restrict);
+        });
+    }
+
+    private static void ConfigureContractAnalysis(ModelBuilder m)
+    {
+        m.Entity<ContractAnalysis>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.HasIndex(x => x.EmailId).IsUnique();
+            e.HasIndex(x => x.WorkflowId).IsUnique();
+
+            // Email relationship is configured on the Email side (ConfigureEmail)
+
+            e.HasOne(x => x.Workflow)
+             .WithOne(x => x.ContractAnalysis)
+             .HasForeignKey<ContractAnalysis>(x => x.WorkflowId)
+             .OnDelete(DeleteBehavior.Restrict);
+
+            e.HasOne(x => x.AgentExecution)
+             .WithMany()
+             .HasForeignKey(x => x.AgentExecutionId)
+             .OnDelete(DeleteBehavior.Restrict);
+        });
+    }
+
+    private static void ConfigureWorkflowResult(ModelBuilder m)
+    {
+        m.Entity<WorkflowResult>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.HasIndex(x => x.WorkflowId).IsUnique();
+
+            e.HasOne(x => x.Workflow)
+             .WithOne(x => x.WorkflowResult)
+             .HasForeignKey<WorkflowResult>(x => x.WorkflowId)
+             .OnDelete(DeleteBehavior.Cascade);
+
+            e.HasOne(x => x.InvoiceAnalysis)
+             .WithMany()
+             .HasForeignKey(x => x.InvoiceAnalysisId)
+             .OnDelete(DeleteBehavior.SetNull)
+             .IsRequired(false);
+
+            e.HasOne(x => x.ContractAnalysis)
+             .WithMany()
+             .HasForeignKey(x => x.ContractAnalysisId)
+             .OnDelete(DeleteBehavior.SetNull)
+             .IsRequired(false);
         });
     }
 }

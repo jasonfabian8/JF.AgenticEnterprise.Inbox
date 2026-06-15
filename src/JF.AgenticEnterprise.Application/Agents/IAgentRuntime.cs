@@ -7,8 +7,8 @@ namespace JF.AgenticEnterprise.Application.Agents;
 public interface IAgentRuntime
 {
     Task<AgentRuntimeResponse> InvokeAsync(
-        AgentRuntimeRequest  request,
-        CancellationToken    ct = default);
+        AgentRuntimeRequest request,
+        CancellationToken ct = default);
 }
 
 /// <summary>
@@ -24,10 +24,10 @@ public sealed record AgentRuntimeRequest(
 /// The structured result of an agent invocation.
 /// </summary>
 public sealed record AgentRuntimeResponse(
-    string             Content,
-    string?            FinishReason,
-    AgentRuntimeUsage  Usage,
-    TimeSpan           Latency);
+    string Content,
+    string? FinishReason,
+    AgentRuntimeUsage Usage,
+    TimeSpan Latency);
 
 /// <summary>
 /// Token consumption reported by the model.

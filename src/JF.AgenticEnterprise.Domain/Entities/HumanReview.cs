@@ -27,10 +27,10 @@ public class HumanReview
 
 public static class ReviewStatus
 {
-    public const string Pending      = "PENDING";
-    public const string Open         = "OPEN";
-    public const string Decided      = "DECIDED";
-    public const string Escalated    = "ESCALATED";
+    public const string Pending = "PENDING";
+    public const string Open = "OPEN";
+    public const string Decided = "DECIDED";
+    public const string Escalated = "ESCALATED";
     public const string AwaitingInfo = "AWAITING_INFO";
 }
 
@@ -38,24 +38,24 @@ public static class ReviewPriority
 {
     public const string Urgent = "URGENT";
     public const string Normal = "NORMAL";
-    public const string Low    = "LOW";
+    public const string Low = "LOW";
 }
 
 public static class ReviewAction
 {
-    public const string Approve                = "APPROVE";
+    public const string Approve = "APPROVE";
     public const string ApproveWithCorrections = "APPROVE_WITH_CORRECTIONS";
-    public const string Reject                 = "REJECT";
-    public const string Escalate               = "ESCALATE";
-    public const string RequestMoreInfo        = "REQUEST_MORE_INFO";
+    public const string Reject = "REJECT";
+    public const string Escalate = "ESCALATE";
+    public const string RequestMoreInfo = "REQUEST_MORE_INFO";
 }
 
 public static class ReviewType
 {
-    public const string ExtractionCorrection   = "EXTRACTION_CORRECTION";
+    public const string ExtractionCorrection = "EXTRACTION_CORRECTION";
     public const string ClassificationOverride = "CLASSIFICATION_OVERRIDE";
-    public const string TaxonomyProposal       = "TAXONOMY_PROPOSAL";
-    public const string ConflictResolution     = "CONFLICT_RESOLUTION";
-    public const string RiskFlags              = "RISK_FLAGS";
-    public const string AgentFailure           = "AGENT_FAILURE";
+    public const string TaxonomyProposal = "TAXONOMY_PROPOSAL";
+    public const string ConflictResolution = "CONFLICT_RESOLUTION";
+    public const string RiskFlags = "RISK_FLAGS";
+    public const string AgentFailure = "AGENT_FAILURE";
 }

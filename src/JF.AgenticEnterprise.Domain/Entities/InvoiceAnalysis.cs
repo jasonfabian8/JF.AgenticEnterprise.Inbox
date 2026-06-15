@@ -41,7 +41,7 @@ public class InvoiceAnalysis
     public DateTimeOffset CreatedAt { get; set; }
 
     // ── Navigation ────────────────────────────────────────────────────────────
-    public Email          Email          { get; set; } = default!;
-    public Workflow       Workflow       { get; set; } = default!;
+    public Email Email { get; set; } = default!;
+    public Workflow Workflow { get; set; } = default!;
     public AgentExecution AgentExecution { get; set; } = default!;
 }

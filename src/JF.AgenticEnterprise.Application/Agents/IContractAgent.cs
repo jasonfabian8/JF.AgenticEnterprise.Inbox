@@ -4,7 +4,7 @@ public interface IContractAgent
 {
     Task<ContractAnalysisResult> ExtractAsync(
         ContractExtractionRequest request,
-        CancellationToken         ct = default);
+        CancellationToken ct = default);
 }
 
 public sealed record ContractExtractionRequest(
@@ -15,12 +15,12 @@ public sealed record ContractExtractionRequest(
     IReadOnlyList<AttachmentContext> Attachments);
 
 public sealed record ContractAnalysisResult(
-    string?            ContractType,
+    string? ContractType,
     IReadOnlyList<string> Parties,
-    string?            EffectiveDate,
-    string?            ExpirationDate,
-    string?            RenewalClause,
+    string? EffectiveDate,
+    string? ExpirationDate,
+    string? RenewalClause,
     IReadOnlyList<string> KeyObligations,
-    float              Confidence,
-    string             Reasoning,
-    string             RawOutputJson);
+    float Confidence,
+    string Reasoning,
+    string RawOutputJson);

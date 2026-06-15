@@ -27,7 +27,7 @@ public class OrchestrationDecision
     public DateTimeOffset CreatedAt { get; set; }
 
     // ── Navigation ────────────────────────────────────────────────────────────
-    public Workflow       Workflow       { get; set; } = default!;
+    public Workflow Workflow { get; set; } = default!;
     public AgentExecution AgentExecution { get; set; } = default!;
 }
 
@@ -36,8 +36,8 @@ public class OrchestrationDecision
 /// </summary>
 public static class NextAgentName
 {
-    public const string InvoiceAgent   = "InvoiceAgent";
-    public const string ContractAgent  = "ContractAgent";
-    public const string HumanReview    = "HumanReview";
-    public const string Complete       = "Complete";
+    public const string InvoiceAgent = "InvoiceAgent";
+    public const string ContractAgent = "ContractAgent";
+    public const string HumanReview = "HumanReview";
+    public const string Complete = "Complete";
 }

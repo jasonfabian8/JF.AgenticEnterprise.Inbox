@@ -27,9 +27,13 @@ public class EmailRepository : IEmailRepository
         return await _context.Emails
             .Include(e => e.Attachments)
             .Include(e => e.Classification)
+            // Sprint 1 attachment-based extractions
             .Include(e => e.InvoiceExtraction)
             .Include(e => e.ContractExtraction!)
                 .ThenInclude(c => c.RiskFlags)
+            // Sprint 2 agent-based analysis
+            .Include(e => e.InvoiceAnalysis)
+            .Include(e => e.ContractAnalysis)
             .FirstOrDefaultAsync(e => e.Id == id, ct);
     }
 

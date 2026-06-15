@@ -20,22 +20,22 @@ public class WorkflowStep
 
 public static class WorkflowStepStatus
 {
-    public const string Pending   = "PENDING";
-    public const string Running   = "RUNNING";
+    public const string Pending = "PENDING";
+    public const string Running = "RUNNING";
     public const string Completed = "COMPLETED";
-    public const string Skipped   = "SKIPPED";
-    public const string Failed    = "FAILED";
+    public const string Skipped = "SKIPPED";
+    public const string Failed = "FAILED";
 }
 
 public static class WorkflowStepName
 {
-    public const string Classifying          = "CLASSIFYING";
-    public const string Orchestrating        = "ORCHESTRATING";
-    public const string AnalyzingDocuments   = "ANALYZING_DOCUMENTS";
-    public const string CrossValidating      = "CROSS_VALIDATING";
-    public const string ExtractingInvoice    = "EXTRACTING_INVOICE";
-    public const string ExtractingContract   = "EXTRACTING_CONTRACT";
-    public const string AnalyzingTaxonomy    = "ANALYZING_TAXONOMY";
-    public const string HumanReview          = "HUMAN_REVIEW";
-    public const string Completing           = "COMPLETING";
+    public const string Classifying = "CLASSIFYING";
+    public const string Orchestrating = "ORCHESTRATING";
+    public const string AnalyzingDocuments = "ANALYZING_DOCUMENTS";
+    public const string CrossValidating = "CROSS_VALIDATING";
+    public const string ExtractingInvoice = "EXTRACTING_INVOICE";
+    public const string ExtractingContract = "EXTRACTING_CONTRACT";
+    public const string AnalyzingTaxonomy = "ANALYZING_TAXONOMY";
+    public const string HumanReview = "HUMAN_REVIEW";
+    public const string Completing = "COMPLETING";
 }

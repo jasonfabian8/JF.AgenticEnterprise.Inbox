@@ -4,14 +4,14 @@ public interface IOrchestratorAgent
 {
     Task<OrchestratorResult> DecideAsync(
         OrchestratorRequest request,
-        CancellationToken   ct = default);
+        CancellationToken ct = default);
 }
 
 public sealed record OrchestratorRequest(
     string WorkflowId,
     string EmailId,
     string ClassificationCategory,
-    float  ClassificationConfidence,
+    float ClassificationConfidence,
     string ClassificationReasoning);
 
 public sealed record OrchestratorResult(
