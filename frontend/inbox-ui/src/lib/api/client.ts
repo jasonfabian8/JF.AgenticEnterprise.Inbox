@@ -101,6 +101,9 @@ export interface EmailDetail {
   attachments: AttachmentDto[]
   invoiceExtraction: InvoiceExtractionDto | null
   contractExtraction: ContractExtractionDto | null
+  // Sprint 2 agent-based analysis
+  invoiceAnalysis: InvoiceAnalysisDto | null
+  contractAnalysis: ContractAnalysisDto | null
 }
 
 export interface WorkflowStepDto {
@@ -145,6 +148,53 @@ export interface AgentExecutionListResponse {
   executions: AgentExecutionDto[]
 }
 
+// ── Sprint 2 analysis DTOs ────────────────────────────────────────────────────
+
+export interface InvoiceAnalysisDto {
+  id: string
+  supplier: string | null
+  invoiceNumber: string | null
+  invoiceDate: string | null
+  dueDate: string | null
+  currency: string | null
+  totalAmount: number | null
+  confidence: number
+  summary: string
+  createdAt: string
+}
+
+export interface ContractAnalysisDto {
+  id: string
+  contractType: string | null
+  parties: string[]
+  effectiveDate: string | null
+  expirationDate: string | null
+  renewalClause: string | null
+  keyObligations: string[]
+  confidence: number
+  reasoning: string
+  createdAt: string
+}
+
+export interface OrchestrationDecisionDto {
+  classificationCategory: string
+  nextAgent: string
+  workflowStatus: string
+  reasoning: string
+  decidedAt: string
+}
+
+export interface WorkflowResultDto {
+  finalStatus: string
+  classificationCategory: string
+  classificationConfidence: number
+  routedToAgent: string
+  summary: string
+  completedAt: string
+  invoiceAnalysis: InvoiceAnalysisDto | null
+  contractAnalysis: ContractAnalysisDto | null
+}
+
 export interface WorkflowDetail {
   workflowId: string
   emailId: string
@@ -154,6 +204,8 @@ export interface WorkflowDetail {
   outcomeType: string | null
   steps: WorkflowStepDto[]
   agentExecutions: AgentExecutionDto[]
+  orchestrationDecision: OrchestrationDecisionDto | null
+  workflowResult: WorkflowResultDto | null
 }
 
 // ── API functions ─────────────────────────────────────────────────────────────

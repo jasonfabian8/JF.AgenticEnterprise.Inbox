@@ -16,6 +16,7 @@ export interface AgentStartedPayload {
   workflowId: string
   agent: string
   emailId: string
+  timestamp: string
 }
 
 export interface AgentCompletedPayload {
@@ -25,6 +26,7 @@ export interface AgentCompletedPayload {
   category: string
   confidence: number
   reasoning: string
+  timestamp: string
 }
 
 export interface AgentFailedPayload {
@@ -32,6 +34,27 @@ export interface AgentFailedPayload {
   agent: string
   emailId: string
   error: string
+  timestamp: string
+}
+
+export interface WorkflowUpdatedPayload {
+  workflowId: string
+  emailId: string
+  status: string
+  currentStep: string
+  nextAgent: string | null
+  timestamp: string
+}
+
+export interface WorkflowCompletedPayload {
+  workflowId: string
+  emailId: string
+  finalStatus: string
+  classificationCategory: string
+  routedToAgent: string
+  invoiceAnalysisId: string | null
+  contractAnalysisId: string | null
+  timestamp: string
 }
 
 // ── Context shape ─────────────────────────────────────────────────────────────
@@ -43,6 +66,8 @@ interface AgentEventContextValue {
   onAgentStarted: (handler: (p: AgentStartedPayload) => void) => () => void
   onAgentCompleted: (handler: (p: AgentCompletedPayload) => void) => () => void
   onAgentFailed: (handler: (p: AgentFailedPayload) => void) => () => void
+  onWorkflowUpdated: (handler: (p: WorkflowUpdatedPayload) => void) => () => void
+  onWorkflowCompleted: (handler: (p: WorkflowCompletedPayload) => void) => () => void
 }
 
 const AgentEventContext = createContext<AgentEventContextValue>({
@@ -52,6 +77,8 @@ const AgentEventContext = createContext<AgentEventContextValue>({
   onAgentStarted: () => () => {},
   onAgentCompleted: () => () => {},
   onAgentFailed: () => () => {},
+  onWorkflowUpdated: () => () => {},
+  onWorkflowCompleted: () => () => {},
 })
 
 // ── Provider ──────────────────────────────────────────────────────────────────
@@ -119,9 +146,34 @@ export function AgentEventProvider({ children }: { children: ReactNode }) {
     [],
   )
 
+  const onWorkflowUpdated = useCallback(
+    (handler: (p: WorkflowUpdatedPayload) => void) => {
+      connectionRef.current?.on('workflow.updated', handler)
+      return () => connectionRef.current?.off('workflow.updated', handler)
+    },
+    [],
+  )
+
+  const onWorkflowCompleted = useCallback(
+    (handler: (p: WorkflowCompletedPayload) => void) => {
+      connectionRef.current?.on('workflow.completed', handler)
+      return () => connectionRef.current?.off('workflow.completed', handler)
+    },
+    [],
+  )
+
   const value = useMemo(
-    () => ({ isConnected, joinWorkflow, leaveWorkflow, onAgentStarted, onAgentCompleted, onAgentFailed }),
-    [isConnected, joinWorkflow, leaveWorkflow, onAgentStarted, onAgentCompleted, onAgentFailed],
+    () => ({
+      isConnected,
+      joinWorkflow,
+      leaveWorkflow,
+      onAgentStarted,
+      onAgentCompleted,
+      onAgentFailed,
+      onWorkflowUpdated,
+      onWorkflowCompleted,
+    }),
+    [isConnected, joinWorkflow, leaveWorkflow, onAgentStarted, onAgentCompleted, onAgentFailed, onWorkflowUpdated, onWorkflowCompleted],
   )
 
   return (

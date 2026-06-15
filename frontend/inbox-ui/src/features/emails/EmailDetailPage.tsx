@@ -3,18 +3,12 @@ import { Link, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { emailApi } from '@/lib/api/client'
 import { StatusBadge, CategoryBadge } from '@/components/ui/badge'
-import { WorkflowTimeline } from '@/features/workflow/WorkflowTimeline'
+import { WorkflowGraph } from '@/features/workflow/WorkflowGraph'
+import { WorkflowStatusCard } from '@/features/workflow/WorkflowStatusCard'
 import { AgentActivityPanel } from '@/features/workflow/AgentActivityPanel'
-import { WorkflowVisualization } from '@/features/workflow/WorkflowVisualization'
-
-type AgentNodeStatus = 'pending' | 'running' | 'completed' | 'failed'
-
-function toAgentStatus(execStatus: string | undefined): AgentNodeStatus {
-  if (execStatus === 'COMPLETED') return 'completed'
-  if (execStatus === 'FAILED')    return 'failed'
-  if (execStatus === 'RUNNING')   return 'running'
-  return 'pending'
-}
+import { InvoiceView } from '@/features/workflow/InvoiceView'
+import { ContractView } from '@/features/workflow/ContractView'
+import { WorkflowTimeline } from '@/features/workflow/WorkflowTimeline'
 
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleString(undefined, {
@@ -71,6 +65,10 @@ export function EmailDetailPage() {
     )
   }
 
+  // Sprint 2 analysis — prefer workflow result (richest), fall back to email-level
+  const invoiceAnalysis = workflow?.workflowResult?.invoiceAnalysis ?? email.invoiceAnalysis
+  const contractAnalysis = workflow?.workflowResult?.contractAnalysis ?? email.contractAnalysis
+
   return (
     <div className="flex h-full flex-col">
       {/* Breadcrumb toolbar */}
@@ -120,7 +118,39 @@ export function EmailDetailPage() {
           )}
         </div>
 
-        {/* Body */}
+        {/* ── Workflow section ────────────────────────────────────────────── */}
+        {workflow ? (
+          <>
+            {/* Compact status + routing summary */}
+            <WorkflowStatusCard workflow={workflow} />
+
+            {/* React Flow graph */}
+            <Section title="Workflow Graph">
+              <WorkflowGraph
+                workflow={workflow}
+                emailSubject={email.subject || '(no subject)'}
+              />
+            </Section>
+
+            {/* Live agent execution cards */}
+            <Section title="Agent Activity">
+              <AgentActivityPanel
+                workflowId={workflow.workflowId}
+                emailId={email.id}
+              />
+            </Section>
+          </>
+        ) : (
+          <Section title="Workflow Timeline">
+            <WorkflowTimeline emailId={email.id} />
+          </Section>
+        )}
+
+        {/* ── Sprint 2 analysis results ───────────────────────────────────── */}
+        {invoiceAnalysis && <InvoiceView analysis={invoiceAnalysis} />}
+        {contractAnalysis && <ContractView analysis={contractAnalysis} />}
+
+        {/* ── Body ────────────────────────────────────────────────────────── */}
         <Section title="Body">
           {email.bodyPlainText
             ? (
@@ -171,9 +201,9 @@ export function EmailDetailPage() {
           </Section>
         )}
 
-        {/* Invoice extraction */}
+        {/* Sprint 1 invoice extraction (legacy) */}
         {email.invoiceExtraction && (
-          <Section title="Invoice Data">
+          <Section title="Invoice Data (Legacy)">
             <Row label="Vendor" value={email.invoiceExtraction.vendorName ?? '—'} />
             <Row label="Invoice #" value={email.invoiceExtraction.invoiceNumber ?? '—'} />
             <Row label="Invoice Date" value={email.invoiceExtraction.invoiceDate ?? '—'} />
@@ -186,32 +216,19 @@ export function EmailDetailPage() {
                   : '—'
               }
             />
-            <Row label="PO Reference" value={email.invoiceExtraction.poReference ?? '—'} />
-            <Row label="Payment Terms" value={email.invoiceExtraction.paymentTerms ?? '—'} />
-            <Row label="Validation" value={email.invoiceExtraction.validationStatus} />
             <Row label="Confidence" value={`${Math.round(email.invoiceExtraction.overallConfidence * 100)}%`} />
           </Section>
         )}
 
-        {/* Contract extraction */}
+        {/* Sprint 1 contract extraction (legacy) */}
         {email.contractExtraction && (
-          <Section title="Contract Data">
+          <Section title="Contract Data (Legacy)">
             <Row label="Party A" value={email.contractExtraction.partyA ?? '—'} />
             <Row label="Party B" value={email.contractExtraction.partyB ?? '—'} />
             <Row label="Type" value={email.contractExtraction.agreementType ?? '—'} />
             <Row label="Effective" value={email.contractExtraction.effectiveDate ?? '—'} />
             <Row label="Expires" value={email.contractExtraction.expiryDate ?? '—'} />
-            <Row
-              label="Auto-Renew"
-              value={
-                email.contractExtraction.autoRenewal
-                  ? `Yes (${email.contractExtraction.autoRenewalNoticeDays ?? '?'}d notice)`
-                  : 'No'
-              }
-            />
-            <Row label="Governing Law" value={email.contractExtraction.governingLaw ?? '—'} />
             <Row label="Confidence" value={`${Math.round(email.contractExtraction.overallConfidence * 100)}%`} />
-
             {email.contractExtraction.riskFlags.length > 0 && (
               <div className="mt-4">
                 <p className="mb-2 text-xs font-medium text-gray-400 uppercase tracking-wide">Risk Flags</p>
@@ -220,11 +237,9 @@ export function EmailDetailPage() {
                     <li key={i} className="flex items-start gap-2 text-xs">
                       <span
                         className={
-                          f.severity === 'HIGH'
-                            ? 'font-semibold text-red-500'
-                            : f.severity === 'MEDIUM'
-                              ? 'font-semibold text-amber-500'
-                              : 'font-semibold text-gray-400'
+                          f.severity === 'HIGH' ? 'font-semibold text-red-500'
+                          : f.severity === 'MEDIUM' ? 'font-semibold text-amber-500'
+                          : 'font-semibold text-gray-400'
                         }
                       >
                         {f.severity}
@@ -235,31 +250,6 @@ export function EmailDetailPage() {
                 </ul>
               </div>
             )}
-          </Section>
-        )}
-
-        {/* Workflow visualization + agent activity */}
-        {workflow ? (
-          <>
-            <Section title="Workflow">
-              <WorkflowVisualization
-                emailSubject={email.subject || '(no subject)'}
-                agentStatus={toAgentStatus(workflow.agentExecutions[0]?.status)}
-                classificationCategory={email.classification?.categoryType}
-                classificationConfidence={email.classification?.confidence}
-              />
-            </Section>
-
-            <Section title="Agent Activity">
-              <AgentActivityPanel
-                workflowId={workflow.workflowId}
-                emailId={email.id}
-              />
-            </Section>
-          </>
-        ) : (
-          <Section title="Workflow Timeline">
-            <WorkflowTimeline emailId={email.id} />
           </Section>
         )}
 

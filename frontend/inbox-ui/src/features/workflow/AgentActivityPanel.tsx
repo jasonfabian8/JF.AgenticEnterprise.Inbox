@@ -1,7 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { workflowApi, type AgentExecutionDto } from '@/lib/api/client'
-import { useAgentEvents, type AgentCompletedPayload, type AgentFailedPayload, type AgentStartedPayload } from '@/lib/signalr/AgentEventContext'
+import {
+  useAgentEvents,
+  type AgentCompletedPayload,
+  type AgentFailedPayload,
+  type AgentStartedPayload,
+  type WorkflowUpdatedPayload,
+  type WorkflowCompletedPayload,
+} from '@/lib/signalr/AgentEventContext'
 import { cn } from '@/lib/utils'
 
 // ── Local live-event state ────────────────────────────────────────────────────
@@ -130,8 +137,15 @@ interface Props {
 
 export function AgentActivityPanel({ workflowId, emailId }: Props) {
   const queryClient = useQueryClient()
-  const { joinWorkflow, leaveWorkflow, onAgentStarted, onAgentCompleted, onAgentFailed } =
-    useAgentEvents()
+  const {
+    joinWorkflow,
+    leaveWorkflow,
+    onAgentStarted,
+    onAgentCompleted,
+    onAgentFailed,
+    onWorkflowUpdated,
+    onWorkflowCompleted,
+  } = useAgentEvents()
 
   const [liveEvents, setLiveEvents] = useState<Map<string, LiveEvent>>(new Map())
   const joined = useRef(false)
@@ -154,6 +168,13 @@ export function AgentActivityPanel({ workflowId, emailId }: Props) {
 
   // Subscribe to live events
   useEffect(() => {
+    const invalidateAll = () => {
+      void queryClient.invalidateQueries({ queryKey: ['email', emailId] })
+      void queryClient.invalidateQueries({ queryKey: ['workflow', emailId] })
+      void queryClient.invalidateQueries({ queryKey: ['workflow-executions', workflowId] })
+      void queryClient.invalidateQueries({ queryKey: ['emails'] })
+    }
+
     const unsub1 = onAgentStarted((p: AgentStartedPayload) => {
       if (p.workflowId !== workflowId) return
       setLiveEvents(prev => new Map(prev).set(p.agent, { agent: p.agent, status: 'running' }))
@@ -170,11 +191,7 @@ export function AgentActivityPanel({ workflowId, emailId }: Props) {
           reasoning:  p.reasoning,
         }),
       )
-      // Invalidate all queries that display this email's data
-      void queryClient.invalidateQueries({ queryKey: ['email', emailId] })
-      void queryClient.invalidateQueries({ queryKey: ['workflow', emailId] })
-      void queryClient.invalidateQueries({ queryKey: ['workflow-executions', workflowId] })
-      void queryClient.invalidateQueries({ queryKey: ['emails'] })
+      invalidateAll()
     })
 
     const unsub3 = onAgentFailed((p: AgentFailedPayload) => {
@@ -185,8 +202,19 @@ export function AgentActivityPanel({ workflowId, emailId }: Props) {
       void queryClient.invalidateQueries({ queryKey: ['workflow-executions', workflowId] })
     })
 
-    return () => { unsub1(); unsub2(); unsub3() }
-  }, [workflowId, emailId, onAgentStarted, onAgentCompleted, onAgentFailed, queryClient])
+    // Workflow-level events — refresh persisted data so WorkflowGraph + analysis views update
+    const unsub4 = onWorkflowUpdated((p: WorkflowUpdatedPayload) => {
+      if (p.workflowId !== workflowId) return
+      void queryClient.invalidateQueries({ queryKey: ['workflow', emailId] })
+    })
+
+    const unsub5 = onWorkflowCompleted((p: WorkflowCompletedPayload) => {
+      if (p.workflowId !== workflowId) return
+      invalidateAll()
+    })
+
+    return () => { unsub1(); unsub2(); unsub3(); unsub4(); unsub5() }
+  }, [workflowId, emailId, onAgentStarted, onAgentCompleted, onAgentFailed, onWorkflowUpdated, onWorkflowCompleted, queryClient])
 
   // Merge live events + persisted executions for display
   const persistedByAgent = new Map(
