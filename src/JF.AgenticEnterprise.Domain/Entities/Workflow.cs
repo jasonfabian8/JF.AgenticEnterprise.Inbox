@@ -23,14 +23,36 @@ public class Workflow
     public WorkflowResult? WorkflowResult { get; set; }
     public InvoiceAnalysis? InvoiceAnalysis { get; set; }
     public ContractAnalysis? ContractAnalysis { get; set; }
+
+    // ── Sprint 3 nav props ────────────────────────────────────────────────────
+    public ICollection<AgentConflict> AgentConflicts { get; set; } = [];
+    public WorkflowKnowledge? WorkflowKnowledge { get; set; }
 }
 
 public static class WorkflowStatus
 {
+    // ── Sprint 1 / 2 ─────────────────────────────────────────────────────────
     public const string Queued = "QUEUED";
     public const string Processing = "PROCESSING";
     public const string AwaitingReview = "AWAITING_REVIEW";
     public const string CompletedAuto = "COMPLETED_AUTO";
     public const string CompletedHuman = "COMPLETED_HUMAN";
     public const string Failed = "FAILED";
+
+    // ── Sprint 3 ──────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Agent conflict or low confidence detected; escalation agents are running
+    /// (Taxonomy Evolution / Human Collaboration).
+    /// </summary>
+    public const string Escalated = "ESCALATED";
+
+    /// <summary>A human reviewer has opened the HumanReview task and is actively deciding.</summary>
+    public const string UnderReview = "UNDER_REVIEW";
+
+    /// <summary>
+    /// Taxonomy Evolution Agent suggested a new category;
+    /// workflow is paused until the recommendation is approved or rejected.
+    /// </summary>
+    public const string AwaitingTaxonomyApproval = "AWAITING_TAXONOMY_APPROVAL";
 }
