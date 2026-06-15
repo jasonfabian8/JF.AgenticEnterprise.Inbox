@@ -69,5 +69,6 @@ app.MapWorkflowExecutionEndpoints();
 app.MapHumanReviewEndpoints();
 app.MapTaxonomyEndpoints();
 app.MapWorkflowReasoningEndpoints();
+app.MapDashboardEndpoints();
 
 app.Run();

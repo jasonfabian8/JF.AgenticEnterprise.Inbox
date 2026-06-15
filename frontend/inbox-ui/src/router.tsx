@@ -3,6 +3,9 @@ import { AppShell } from '@/layouts/AppShell'
 import { EmailListPage } from '@/features/emails/EmailListPage'
 import { EmailDetailPage } from '@/features/emails/EmailDetailPage'
 import { SimulatorPage } from '@/features/simulator/SimulatorPage'
+import { HumanReviewQueuePage } from '@/features/reviews/HumanReviewQueuePage'
+import { TaxonomyQueuePage } from '@/features/taxonomy/TaxonomyQueuePage'
+import { DashboardPage } from '@/features/dashboard/DashboardPage'
 
 export const router = createBrowserRouter([
   {
@@ -13,14 +16,9 @@ export const router = createBrowserRouter([
       { path: 'inbox', element: <EmailListPage /> },
       { path: 'inbox/:id', element: <EmailDetailPage /> },
       { path: 'simulator', element: <SimulatorPage /> },
-      {
-        path: 'dashboard',
-        element: (
-          <div className="flex items-center justify-center py-24 text-sm text-gray-400">
-            Dashboard — coming in Sprint 1
-          </div>
-        ),
-      },
+      { path: 'reviews', element: <HumanReviewQueuePage /> },
+      { path: 'taxonomy', element: <TaxonomyQueuePage /> },
+      { path: 'dashboard', element: <DashboardPage /> },
     ],
   },
 ])
