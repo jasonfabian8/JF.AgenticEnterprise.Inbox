@@ -9,6 +9,9 @@ import { AgentActivityPanel } from '@/features/workflow/AgentActivityPanel'
 import { InvoiceView } from '@/features/workflow/InvoiceView'
 import { ContractView } from '@/features/workflow/ContractView'
 import { WorkflowTimeline } from '@/features/workflow/WorkflowTimeline'
+import { AgentCollaborationView } from '@/features/workflow/AgentCollaborationView'
+import { WorkflowKnowledgeView } from '@/features/workflow/WorkflowKnowledgeView'
+import { ReasoningTimeline } from '@/features/workflow/ReasoningTimeline'
 
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleString(undefined, {
@@ -138,6 +141,19 @@ export function EmailDetailPage() {
                 workflowId={workflow.workflowId}
                 emailId={email.id}
               />
+            </Section>
+
+            {/* Sprint 3 — multi-agent reasoning */}
+            <Section title="Agent Conflicts">
+              <AgentCollaborationView emailId={email.id} />
+            </Section>
+
+            <Section title="Document Understanding">
+              <WorkflowKnowledgeView emailId={email.id} />
+            </Section>
+
+            <Section title="Reasoning Timeline">
+              <ReasoningTimeline emailId={email.id} />
             </Section>
           </>
         ) : (

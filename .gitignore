@@ -58,3 +58,4 @@ appsettings.*.json
 # Other
 *.DS_Store
 Thumbs.db
+/src/JF.AgenticEnterprise.Api/Data

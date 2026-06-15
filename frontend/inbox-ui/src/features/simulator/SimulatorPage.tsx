@@ -16,240 +16,242 @@ interface EmailTemplate {
 
 const TEMPLATES: Record<string, EmailTemplate> = {
   Invoice: {
-    senderName: 'Accounts Payable — Proveedor Global S.A.',
-    senderEmail: 'cuentas@proveedorglobal.com',
-    subject: 'Factura #PG-2024-00847 — Servicios de Consultoría — Marzo 2024',
-    body: `Estimado equipo de finanzas,
+    senderName: 'Accounts Payable — Global Supplier Inc.',
+    senderEmail: 'ap@globalsupplier.com',
+    subject: 'Invoice #GS-2024-00847 — Consulting Services — March 2024',
+    body: `Dear Finance Team,
 
-Adjuntamos la factura correspondiente a los servicios de consultoría prestados durante el mes de marzo de 2024.
+Please find attached the invoice for consulting services rendered during March 2024.
 
-Detalles de la factura:
-  Número de factura:  PG-2024-00847
-  Fecha de emisión:   15/03/2024
-  Fecha de vencimiento: 15/04/2024
-  Proveedor:          Proveedor Global S.A.
-  Concepto:           Consultoría estratégica — 120 horas
-  Subtotal:           USD 18,000.00
-  IVA (16%):          USD 2,880.00
-  Total:              USD 20,880.00
+Invoice Details:
+  Invoice Number:   GS-2024-00847
+  Issue Date:       03/15/2024
+  Due Date:         04/15/2024
+  Vendor:           Global Supplier Inc.
+  Description:      Strategic consulting — 120 hours
+  Subtotal:         USD 18,000.00
+  Tax (16%):        USD 2,880.00
+  Total Due:        USD 20,880.00
 
-Datos bancarios para transferencia:
-  Banco:              BBVA Bancomer
-  CLABE:              012180001234567890
-  Referencia:         PG-2024-00847
+Wire Transfer Details:
+  Bank:             First National Bank
+  Account Number:   ****7890
+  Routing Number:   021000021
+  Reference:        GS-2024-00847
 
-Ante cualquier duda no dude en contactarnos.
+Please do not hesitate to reach out with any questions.
 
-Atentamente,
-Cuentas por Cobrar
-Proveedor Global S.A.`,
+Best regards,
+Accounts Receivable
+Global Supplier Inc.`,
     attachments: [
-      { filename: 'Factura_PG-2024-00847.pdf', mimeType: 'application/pdf', sizeBytes: 245_760 },
-      { filename: 'Anexo_desglose_horas.xlsx', mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', sizeBytes: 38_912 },
+      { filename: 'Invoice_GS-2024-00847.pdf', mimeType: 'application/pdf', sizeBytes: 245_760 },
+      { filename: 'Hours_Breakdown_March2024.xlsx', mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', sizeBytes: 38_912 },
     ],
   },
 
   Contract: {
-    senderName: 'Legal — Corporativo Nexo Internacional',
-    senderEmail: 'legal@nexointernacional.com',
-    subject: 'Contrato de Servicios Administrados — Para firma y revisión',
-    body: `Estimados,
+    senderName: 'Legal — Nexo International Corp.',
+    senderEmail: 'legal@nexointernational.com',
+    subject: 'Managed Services Agreement — For Review and Signature',
+    body: `Dear Team,
 
-En seguimiento a nuestras negociaciones, adjuntamos el Contrato de Servicios Administrados de TI para su revisión y firma.
+Following our recent negotiations, please find attached the Managed IT Services Agreement for your review and signature.
 
-Puntos clave del contrato:
-  Tipo de acuerdo:    Contrato de Servicios Administrados (MSA)
-  Partes:             Nexo Internacional S.A. de C.V. y su organización
-  Vigencia:           01/04/2024 — 31/03/2026 (24 meses)
-  Renovación:         Automática con 60 días de aviso de no renovación
-  Valor total:        USD 480,000.00 anuales
-  SLA comprometido:   99.5% uptime mensual
-  Cláusula de penalización: 5% del mensual por cada punto porcentual bajo SLA
+Key Contract Terms:
+  Agreement Type:     Managed Services Agreement (MSA)
+  Parties:            Nexo International Corp. and your organization
+  Term:               04/01/2024 — 03/31/2026 (24 months)
+  Auto-Renewal:       Yes, with 60-day non-renewal notice
+  Annual Value:       USD 480,000.00
+  SLA Commitment:     99.5% monthly uptime
+  Penalty Clause:     5% of monthly fee per percentage point below SLA
 
-Obligaciones principales del proveedor:
-  - Soporte 24/7 para incidentes críticos (P1/P2)
-  - Revisiones mensuales de capacidad y desempeño
-  - Entrega de reportes ejecutivos bimestrales
-  - Cumplimiento con ISO 27001 e ITIL v4
+Key Vendor Obligations:
+  - 24/7 support for critical incidents (P1/P2)
+  - Monthly capacity and performance reviews
+  - Bi-monthly executive reporting
+  - Compliance with ISO 27001 and ITIL v4
 
-Le agradecemos nos confirme la recepción y nos comparta sus comentarios antes del 25 de marzo.
+Please confirm receipt and share your comments by March 25th.
 
-Quedamos a sus órdenes,
-Departamento Legal
-Nexo Internacional`,
+Kind regards,
+Legal Department
+Nexo International Corp.`,
     attachments: [
-      { filename: 'MSA_Nexo_Internacional_v3.pdf', mimeType: 'application/pdf', sizeBytes: 1_048_576 },
-      { filename: 'Anexo_A_Niveles_de_Servicio.pdf', mimeType: 'application/pdf', sizeBytes: 204_800 },
-      { filename: 'Anexo_B_Tarifas_2024.xlsx', mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', sizeBytes: 51_200 },
+      { filename: 'MSA_Nexo_International_v3.pdf', mimeType: 'application/pdf', sizeBytes: 1_048_576 },
+      { filename: 'Exhibit_A_Service_Levels.pdf', mimeType: 'application/pdf', sizeBytes: 204_800 },
+      { filename: 'Exhibit_B_Pricing_2024.xlsx', mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', sizeBytes: 51_200 },
     ],
   },
 
   'Commercial Proposal': {
-    senderName: 'Ventas Corporativas — TechSolutions MX',
-    senderEmail: 'ventas@techsolutions.mx',
-    subject: 'Propuesta Comercial — Plataforma de Analítica en la Nube — RFP-2024-112',
-    body: `Estimado equipo de adquisiciones,
+    senderName: 'Corporate Sales — TechSolutions USA',
+    senderEmail: 'sales@techsolutions.com',
+    subject: 'Commercial Proposal — Cloud Analytics Platform — RFP-2024-112',
+    body: `Dear Procurement Team,
 
-En respuesta a su Solicitud de Propuesta RFP-2024-112, nos complace presentar nuestra propuesta para la implementación de una plataforma de analítica en la nube.
+In response to your Request for Proposal RFP-2024-112, we are pleased to present our proposal for implementing a cloud analytics platform.
 
-Resumen ejecutivo:
-  Solución propuesta:  TechAnalytics Cloud Suite Enterprise
-  Implementación:      14 semanas
-  Licenciamiento:      Suscripción anual por usuario
-  Usuarios incluidos:  150 licencias
-  Precio anual:        USD 135,000.00
-  Descuento ofrecido:  15% por contrato de 3 años (USD 344,250.00 total)
+Executive Summary:
+  Proposed Solution:  TechAnalytics Cloud Suite Enterprise
+  Implementation:     14 weeks
+  Licensing:          Annual per-user subscription
+  Included Users:     150 licenses
+  Annual Price:       USD 135,000.00
+  Discount Offered:   15% for a 3-year contract (USD 344,250.00 total)
 
-Nuestra propuesta incluye:
-  ✓ Migración de datos históricos (hasta 5 años)
-  ✓ Integración con sus sistemas ERP y CRM actuales
-  ✓ Capacitación para 20 usuarios administradores
-  ✓ Soporte técnico premium durante el primer año
-  ✓ Garantía de resultados: ROI mínimo del 200% en 18 meses
+Our proposal includes:
+  ✓ Historical data migration (up to 5 years)
+  ✓ Integration with your existing ERP and CRM systems
+  ✓ Training for 20 administrator users
+  ✓ Premium technical support during the first year
+  ✓ Results guarantee: minimum 200% ROI within 18 months
 
-Esta oferta es válida hasta el 31 de marzo de 2024.
+This offer is valid until March 31, 2024.
 
-Con gusto agendamos una demostración en vivo.
+We would be happy to schedule a live demonstration at your convenience.
 
-Saludos,
-Equipo de Ventas Corporativas
-TechSolutions MX`,
+Best regards,
+Corporate Sales Team
+TechSolutions USA`,
     attachments: [
-      { filename: 'Propuesta_TechAnalytics_RFP-2024-112.pdf', mimeType: 'application/pdf', sizeBytes: 3_145_728 },
-      { filename: 'Caso_de_Exito_Cliente_Referencia.pdf', mimeType: 'application/pdf', sizeBytes: 819_200 },
+      { filename: 'Proposal_TechAnalytics_RFP-2024-112.pdf', mimeType: 'application/pdf', sizeBytes: 3_145_728 },
+      { filename: 'Case_Study_Reference_Client.pdf', mimeType: 'application/pdf', sizeBytes: 819_200 },
     ],
   },
 
   'Information Request': {
-    senderName: 'María González',
-    senderEmail: 'mgonzalez@clienteempresa.com',
-    subject: 'Consulta sobre estado de expediente y tiempos de entrega',
-    body: `Buen día,
+    senderName: 'Mary Johnson',
+    senderEmail: 'mjohnson@clientcompany.com',
+    subject: 'Follow-up: Case Status and Delivery Timeline',
+    body: `Good morning,
 
-Me pongo en contacto para hacer seguimiento a dos puntos pendientes de nuestra relación comercial:
+I am reaching out to follow up on two pending items from our business relationship:
 
-1. Estado del expediente #EXP-2024-0391:
-   Según nuestros registros el expediente fue enviado el 28 de febrero. A la fecha no hemos recibido confirmación de recepción ni número de folio asignado. ¿Podría confirmarnos si está en proceso?
+1. Status of case #CASE-2024-0391:
+   According to our records, the case was submitted on February 28th. As of today we have not received a confirmation or assigned reference number. Could you confirm whether it is being processed?
 
-2. Tiempos de entrega para el lote pendiente:
-   En el pedido PO-44821 compramos 500 unidades del SKU MON-27-4K con entrega comprometida para la segunda semana de marzo. Necesitamos saber si habrá retraso, ya que tenemos una línea de producción esperando este componente.
+2. Delivery timeline for pending order:
+   Under purchase order PO-44821 we ordered 500 units of SKU MON-27-4K with a committed delivery for the second week of March. We need to know if there will be any delay, as we have a production line waiting on this component.
 
-3. Documentación requerida:
-   Para el cierre contable de Q1 necesitamos que nos envíen los certificados de calidad de los últimos tres envíos (enero, febrero y marzo).
+3. Required documentation:
+   For Q1 accounting close we need the quality certificates for the last three shipments (January, February, and March).
 
-Agradezco su pronta atención a estos puntos.
+Thank you for your prompt attention to these items.
 
-Saludos cordiales,
-María González
-Gerente de Compras
-Cliente Empresa S.A.
-Tel: +52 55 1234 5678`,
+Kind regards,
+Mary Johnson
+Purchasing Manager
+Client Company Inc.
+Tel: +1 (555) 234-5678`,
     attachments: [],
   },
 
   Marketing: {
-    senderName: 'Equipo CloudWorld Summit 2024',
+    senderName: 'CloudWorld Summit 2024 Team',
     senderEmail: 'noreply@cloudworldsummit.com',
-    subject: '🚀 CloudWorld Summit 2024 — Últimos lugares disponibles | Descuento del 30%',
-    body: `¡Hola!
+    subject: '🚀 CloudWorld Summit 2024 — Last Spots Available | 30% Discount',
+    body: `Hi there,
 
-El evento más importante de tecnología en la nube del año está por llegar y NO quieres perdértelo.
+The most important cloud technology event of the year is coming and you DON'T want to miss it.
 
 ☁️ CLOUDWORLD SUMMIT 2024
-📅 Fecha: 18–20 de abril de 2024
-📍 Lugar: Centro Citibanamex, Ciudad de México
+📅 Date: April 18–20, 2024
+📍 Venue: Convention Center, San Francisco, CA
 
-¿POR QUÉ ASISTIR?
-  • +80 sesiones técnicas y keynotes
-  • Acceso a demostraciones en vivo de las últimas tendencias en IA y Cloud
-  • Networking con más de 5,000 profesionales de TI
-  • Certificaciones express en AWS, Azure y Google Cloud
-  • Zona de exposición con +120 proveedores tecnológicos
+WHY ATTEND?
+  • 80+ technical sessions and keynotes
+  • Live demos of the latest AI and Cloud trends
+  • Networking with 5,000+ IT professionals
+  • Express certifications in AWS, Azure and Google Cloud
+  • Expo with 120+ technology vendors
 
-OFERTA ESPECIAL — VÁLIDA HASTA EL 31 DE MARZO:
-  Entrada General:    $2,500 MXN → $1,750 MXN (30% OFF)
-  Entrada VIP:        $5,000 MXN → $3,500 MXN (30% OFF)
-  Código de descuento: CLOUD30
+SPECIAL OFFER — VALID UNTIL MARCH 31:
+  General Admission:  $299 USD → $209 USD (30% OFF)
+  VIP Access:         $599 USD → $419 USD (30% OFF)
+  Discount code: CLOUD30
 
-Registra a todo tu equipo con el paquete corporativo (5+ personas) y obtén un 40% adicional.
+Register your entire team with the corporate package (5+ people) and get an additional 40% off.
 
-[REGISTRARME AHORA]
+[REGISTER NOW]
 
-Para darse de baja de estos comunicados, responda con "BAJA" en el asunto.
+To unsubscribe from these communications, reply with "UNSUBSCRIBE" in the subject line.
 
-Equipo de Marketing | CloudWorld Summit 2024`,
+Marketing Team | CloudWorld Summit 2024`,
     attachments: [
-      { filename: 'Programa_CloudWorld_Summit_2024.pdf', mimeType: 'application/pdf', sizeBytes: 1_572_864 },
+      { filename: 'CloudWorld_Summit_2024_Program.pdf', mimeType: 'application/pdf', sizeBytes: 1_572_864 },
     ],
   },
 
   'Bank Statement': {
-    senderName: 'BBVA Bancomer — Banca Empresarial',
-    senderEmail: 'notificaciones@bbva.com.mx',
-    subject: 'Estado de Cuenta Empresarial — Febrero 2024 — Cuenta ***4521',
-    body: `Estimado cliente,
+    senderName: 'First National Bank — Business Banking',
+    senderEmail: 'notifications@firstnationalbank.com',
+    subject: 'Business Account Statement — February 2024 — Account ***4521',
+    body: `Dear Valued Customer,
 
-Le informamos que su estado de cuenta del mes de febrero de 2024 ya está disponible.
+Your account statement for February 2024 is now available.
 
-RESUMEN DE CUENTA
-  Número de cuenta:   ****-****-****-4521
-  Tipo de cuenta:     Cuenta Corriente Empresarial
-  Período:            01/02/2024 — 29/02/2024
-  Moneda:             MXN
+ACCOUNT SUMMARY
+  Account Number:     ****-****-****-4521
+  Account Type:       Business Checking Account
+  Period:             02/01/2024 — 02/29/2024
+  Currency:           USD
 
-MOVIMIENTOS DEL PERÍODO
-  Saldo inicial:      $1,245,830.45
-  Total cargos:       $   892,150.00
-  Total abonos:       $   435,200.00
-  Saldo final:        $   788,880.45
+PERIOD ACTIVITY
+  Opening Balance:    $1,245,830.45
+  Total Debits:       $  892,150.00
+  Total Credits:      $  435,200.00
+  Closing Balance:    $  788,880.45
 
-CARGOS PRINCIPALES:
-  04/02  Pago a proveedores batch      $  245,000.00
-  10/02  Transferencia SPEI saliente   $  380,000.00
-  15/02  Domiciliación servicios       $   47,150.00
-  28/02  Comisiones bancarias          $   15,000.00
+MAIN DEBITS:
+  02/04  Batch supplier payment         $  245,000.00
+  02/10  Outgoing wire transfer         $  380,000.00
+  02/15  Direct debit — services        $   47,150.00
+  02/28  Bank fees                      $   15,000.00
 
-ABONOS PRINCIPALES:
-  07/02  Depósito cliente ABC Corp     $  200,000.00
-  14/02  Transferencia SPEI entrante   $  135,000.00
-  21/02  Intereses generados           $      200.00
+MAIN CREDITS:
+  02/07  Deposit — ABC Corp             $  200,000.00
+  02/14  Incoming wire transfer         $  135,000.00
+  02/21  Interest earned                $      200.00
 
-Su estado de cuenta completo está adjunto en formato PDF.
-Por seguridad, nunca compartimos contraseñas por correo electrónico.
+Your full statement is attached in PDF format.
+For your security, we will never ask for passwords via email.
 
-Banca Empresarial BBVA México`,
+Business Banking
+First National Bank`,
     attachments: [
-      { filename: 'Estado_Cuenta_Feb2024_4521.pdf', mimeType: 'application/pdf', sizeBytes: 614_400 },
+      { filename: 'Statement_Feb2024_4521.pdf', mimeType: 'application/pdf', sizeBytes: 614_400 },
     ],
   },
 
   Unknown: {
-    senderName: 'Roberto Méndez',
-    senderEmail: 'rmendez@ejemplo.com',
-    subject: 'RE: FWD: Actualización importante',
-    body: `Hola,
+    senderName: 'Robert Mendez',
+    senderEmail: 'rmendez@example.com',
+    subject: 'RE: FWD: Important update',
+    body: `Hi,
 
-En seguimiento al correo anterior, quisiera saber si ya tuviste oportunidad de revisar lo que te enviamos la semana pasada.
+Following up on the previous email — just wanted to check if you had a chance to review what we sent last week.
 
-Quedo pendiente.
+Looking forward to your response.
 
-Saludos
-Roberto
+Regards,
+Robert
 
---- Mensaje original ---
-De: Ana Torres
-Para: Roberto Méndez
-Asunto: FWD: Actualización importante
+--- Original Message ---
+From: Anna Torres
+To: Robert Mendez
+Subject: FWD: Important update
 
-Fwd del doc que me pasó Marcos.
+Forwarding the doc that Marcus sent over.
 
---- Mensaje reenviado ---
-De: Marcos Ruiz
-Para: Ana Torres
+--- Forwarded Message ---
+From: Marcus Ruiz
+To: Anna Torres
 
-Ana, comparte esto con quien corresponda.
+Anna, please share this with whoever needs it.
 
-[El archivo original no fue incluido en este reenvío]`,
+[The original file was not included in this forward]`,
     attachments: [],
   },
 }
@@ -272,11 +274,11 @@ function AttachmentRow({
   att,
   onChange,
   onRemove,
-}: {
+}: Readonly<{
   att: AttachmentIngestDto
   onChange: (next: AttachmentIngestDto) => void
   onRemove: () => void
-}) {
+}>) {
   return (
     <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
       <span className="text-sm text-gray-400 select-none">📎</span>
@@ -288,6 +290,7 @@ function AttachmentRow({
       />
       <select
         className="shrink-0 rounded border border-gray-200 bg-white px-1.5 py-0.5 text-xs text-gray-600 outline-none"
+        title="File type"
         value={att.mimeType}
         onChange={e => onChange({ ...att, mimeType: e.target.value })}
       >
@@ -386,7 +389,7 @@ export function SimulatorPage() {
       <div className="flex items-center gap-3 border-b border-gray-200 bg-white px-6 py-3">
         <span className="text-sm font-semibold text-gray-800">Email Simulator</span>
         <span className="text-xs text-gray-400">
-          Genera y envía correos de prueba al pipeline de agentes
+          Generate and send test emails to the agent pipeline
         </span>
       </div>
 
@@ -396,7 +399,7 @@ export function SimulatorPage() {
           {/* Category quick-fill */}
           <div className="rounded-lg border border-gray-200 bg-white p-5">
             <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-400">
-              Generar por categoría
+              Generate by category
             </p>
             <div className="flex flex-wrap gap-2">
               {CATEGORIES.map(cat => (
@@ -417,7 +420,7 @@ export function SimulatorPage() {
             </div>
             {activeCategory && (
               <p className="mt-3 text-xs text-gray-400">
-                Plantilla <strong className="text-gray-600">{activeCategory}</strong> cargada — puedes editar los campos antes de enviar.
+                Template <strong className="text-gray-600">{activeCategory}</strong> loaded — you can edit the fields before sending.
               </p>
             )}
           </div>
@@ -425,28 +428,28 @@ export function SimulatorPage() {
           {/* Form */}
           <div className="rounded-lg border border-gray-200 bg-white p-5 space-y-4">
             <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
-              Datos del correo
+              Email data
             </p>
 
             {/* Sender row */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="mb-1 block text-xs text-gray-500">Nombre del remitente</label>
+                <label className="mb-1 block text-xs text-gray-500">Sender name</label>
                 <input
                   className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 placeholder:text-gray-300"
-                  placeholder="Acme Corp — Finanzas"
+                  placeholder="Acme Corp — Finance"
                   value={form.senderName}
                   onChange={e => setField('senderName', e.target.value)}
                 />
               </div>
               <div>
                 <label className="mb-1 block text-xs text-gray-500">
-                  Email del remitente <span className="text-red-400">*</span>
+                  Sender email <span className="text-red-400">*</span>
                 </label>
                 <input
                   type="email"
                   className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 placeholder:text-gray-300"
-                  placeholder="remitente@empresa.com"
+                  placeholder="sender@company.com"
                   value={form.senderEmail}
                   onChange={e => setField('senderEmail', e.target.value)}
                 />
@@ -456,11 +459,11 @@ export function SimulatorPage() {
             {/* Subject */}
             <div>
               <label className="mb-1 block text-xs text-gray-500">
-                Asunto <span className="text-red-400">*</span>
+                Subject <span className="text-red-400">*</span>
               </label>
               <input
                 className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 placeholder:text-gray-300"
-                placeholder="Factura #001 — Servicios de enero"
+                placeholder="Invoice #001 — January services"
                 value={form.subject}
                 onChange={e => setField('subject', e.target.value)}
               />
@@ -469,12 +472,12 @@ export function SimulatorPage() {
             {/* Body */}
             <div>
               <label className="mb-1 block text-xs text-gray-500">
-                Cuerpo del correo <span className="text-red-400">*</span>
+                Body <span className="text-red-400">*</span>
               </label>
               <textarea
                 rows={14}
                 className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 placeholder:text-gray-300 resize-y font-mono leading-relaxed"
-                placeholder="Escriba el contenido del correo…"
+                placeholder="Write the email body here…"
                 value={form.body}
                 onChange={e => setField('body', e.target.value)}
               />
@@ -483,13 +486,13 @@ export function SimulatorPage() {
             {/* Attachments */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="text-xs text-gray-500">Adjuntos (opcional)</label>
+                <label className="text-xs text-gray-500">Attachments (optional)</label>
                 <button
                   type="button"
                   onClick={addAttachment}
                   className="flex items-center gap-1 rounded-md border border-dashed border-gray-300 px-2.5 py-1 text-xs text-gray-400 hover:border-blue-300 hover:text-blue-500 transition-colors"
                 >
-                  + Agregar adjunto
+                  + Add attachment
                 </button>
               </div>
 
@@ -505,7 +508,7 @@ export function SimulatorPage() {
                   ))}
                 </div>
               ) : (
-                <p className="text-xs italic text-gray-300 py-1">Sin adjuntos</p>
+                <p className="text-xs italic text-gray-300 py-1">No attachments</p>
               )}
             </div>
           </div>
@@ -517,7 +520,7 @@ export function SimulatorPage() {
               onClick={() => { setForm(EMPTY); setActiveCategory(null); mutation.reset() }}
               className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
             >
-              Limpiar formulario
+              Clear form
             </button>
 
             <button
@@ -534,10 +537,10 @@ export function SimulatorPage() {
               {mutation.isPending ? (
                 <>
                   <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                  Enviando…
+                  Sending…
                 </>
               ) : (
-                'Enviar al Inbox →'
+                'Send to Inbox →'
               )}
             </button>
           </div>
@@ -546,25 +549,25 @@ export function SimulatorPage() {
           {mutation.isSuccess && (
             <div className="rounded-lg border border-green-200 bg-green-50 px-5 py-4">
               <p className="text-sm font-medium text-green-800">
-                ✓ Correo enviado al pipeline
+                ✓ Email sent to the pipeline
               </p>
               <p className="mt-1 text-xs text-green-600">
                 ID: <span className="font-mono">{mutation.data.emailId}</span>
-                {' · '}Estado inicial: <strong>{mutation.data.status}</strong>
+                {' · '}Initial status: <strong>{mutation.data.status}</strong>
               </p>
               <div className="mt-3 flex gap-3">
                 <Link
                   to={`/inbox/${mutation.data.emailId}`}
                   className="text-xs font-medium text-green-700 underline hover:text-green-900"
                 >
-                  Ver en Inbox →
+                  View in Inbox →
                 </Link>
                 <button
                   type="button"
                   onClick={() => { setForm(EMPTY); setActiveCategory(null); mutation.reset() }}
                   className="text-xs text-green-600 hover:text-green-800"
                 >
-                  Enviar otro
+                  Send another
                 </button>
               </div>
             </div>
@@ -573,11 +576,11 @@ export function SimulatorPage() {
           {/* Error */}
           {mutation.isError && (
             <div className="rounded-lg border border-red-200 bg-red-50 px-5 py-4">
-              <p className="text-sm font-medium text-red-800">Error al enviar el correo</p>
+              <p className="text-sm font-medium text-red-800">Failed to send email</p>
               <p className="mt-1 text-xs text-red-600">
                 {mutation.error instanceof Error
                   ? mutation.error.message
-                  : 'Error desconocido. Verifica que el API esté en ejecución.'}
+                  : 'Unknown error. Make sure the API is running.'}
               </p>
             </div>
           )}

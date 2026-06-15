@@ -34,4 +34,12 @@ public sealed class AiProviderOptions
 
     public string ContractAgentId      { get; set; } = "Contract-Agent";
     public string ContractAgentVersion { get; set; } = "1";
+
+    // ── Sprint 3 agents ───────────────────────────────────────────────────────
+
+    public string TaxonomyEvolutionAgentId      { get; set; } = "Taxonomy-Evolution-Agent";
+    public string TaxonomyEvolutionAgentVersion { get; set; } = "1";
+
+    public string HumanCollaborationAgentId      { get; set; } = "Human-Collaboration-Agent";
+    public string HumanCollaborationAgentVersion { get; set; } = "1";
 }

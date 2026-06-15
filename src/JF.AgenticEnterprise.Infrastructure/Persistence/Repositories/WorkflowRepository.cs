@@ -34,9 +34,13 @@ public class WorkflowRepository : IWorkflowRepository
         => _context.Workflows
             .Include(w => w.Steps.OrderBy(s => s.StepOrder))
             .Include(w => w.AgentExecutions.OrderBy(a => a.StartedAt))
+            .Include(w => w.HumanReviews.OrderBy(r => r.QueuedAt))
             .Include(w => w.OrchestrationDecision)
             .Include(w => w.WorkflowResult)
                 .ThenInclude(r => r!.InvoiceAnalysis)
             .Include(w => w.WorkflowResult)
-                .ThenInclude(r => r!.ContractAnalysis);
+                .ThenInclude(r => r!.ContractAnalysis)
+            // Sprint 3
+            .Include(w => w.AgentConflicts.OrderBy(c => c.CreatedAt))
+            .Include(w => w.WorkflowKnowledge);
 }

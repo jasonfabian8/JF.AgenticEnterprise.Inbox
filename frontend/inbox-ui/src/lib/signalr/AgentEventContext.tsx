@@ -57,6 +57,54 @@ export interface WorkflowCompletedPayload {
   timestamp: string
 }
 
+// ── Sprint 3 event types ──────────────────────────────────────────────────────
+
+export interface ConflictDetectedPayload {
+  workflowId: string
+  emailId: string
+  conflictId: string
+  conflictType: string
+  sourceAgent: string
+  targetAgent: string
+  sourceValue: string | null
+  targetValue: string | null
+  sourceConfidence: number
+  targetConfidence: number
+  description: string
+  timestamp: string
+}
+
+export interface TaxonomySuggestedPayload {
+  workflowId: string
+  emailId: string
+  proposalId: string
+  suggestedCategory: string
+  confidence: number
+  reasoning: string
+  timestamp: string
+}
+
+export interface ReviewRequestedPayload {
+  workflowId: string
+  emailId: string
+  reviewId: string
+  reviewType: string
+  priority: string
+  question: string
+  recommendation: string
+  timestamp: string
+}
+
+export interface ReviewCompletedPayload {
+  workflowId: string
+  emailId: string
+  reviewId: string
+  action: string
+  reviewerId: string
+  overrideCategory: string | null
+  timestamp: string
+}
+
 // ── Context shape ─────────────────────────────────────────────────────────────
 
 interface AgentEventContextValue {
@@ -68,6 +116,11 @@ interface AgentEventContextValue {
   onAgentFailed: (handler: (p: AgentFailedPayload) => void) => () => void
   onWorkflowUpdated: (handler: (p: WorkflowUpdatedPayload) => void) => () => void
   onWorkflowCompleted: (handler: (p: WorkflowCompletedPayload) => void) => () => void
+  // Sprint 3
+  onConflictDetected: (handler: (p: ConflictDetectedPayload) => void) => () => void
+  onTaxonomySuggested: (handler: (p: TaxonomySuggestedPayload) => void) => () => void
+  onReviewRequested: (handler: (p: ReviewRequestedPayload) => void) => () => void
+  onReviewCompleted: (handler: (p: ReviewCompletedPayload) => void) => () => void
 }
 
 const AgentEventContext = createContext<AgentEventContextValue>({
@@ -79,11 +132,15 @@ const AgentEventContext = createContext<AgentEventContextValue>({
   onAgentFailed: () => () => {},
   onWorkflowUpdated: () => () => {},
   onWorkflowCompleted: () => () => {},
+  onConflictDetected: () => () => {},
+  onTaxonomySuggested: () => () => {},
+  onReviewRequested: () => () => {},
+  onReviewCompleted: () => () => {},
 })
 
 // ── Provider ──────────────────────────────────────────────────────────────────
 
-export function AgentEventProvider({ children }: { children: ReactNode }) {
+export function AgentEventProvider({ children }: Readonly<{ children: ReactNode }>) {
   const [isConnected, setIsConnected] = useState(false)
   const connectionRef = useRef<signalR.HubConnection | null>(null)
 
@@ -162,6 +219,38 @@ export function AgentEventProvider({ children }: { children: ReactNode }) {
     [],
   )
 
+  const onConflictDetected = useCallback(
+    (handler: (p: ConflictDetectedPayload) => void) => {
+      connectionRef.current?.on('conflict.detected', handler)
+      return () => connectionRef.current?.off('conflict.detected', handler)
+    },
+    [],
+  )
+
+  const onTaxonomySuggested = useCallback(
+    (handler: (p: TaxonomySuggestedPayload) => void) => {
+      connectionRef.current?.on('taxonomy.suggested', handler)
+      return () => connectionRef.current?.off('taxonomy.suggested', handler)
+    },
+    [],
+  )
+
+  const onReviewRequested = useCallback(
+    (handler: (p: ReviewRequestedPayload) => void) => {
+      connectionRef.current?.on('review.requested', handler)
+      return () => connectionRef.current?.off('review.requested', handler)
+    },
+    [],
+  )
+
+  const onReviewCompleted = useCallback(
+    (handler: (p: ReviewCompletedPayload) => void) => {
+      connectionRef.current?.on('review.completed', handler)
+      return () => connectionRef.current?.off('review.completed', handler)
+    },
+    [],
+  )
+
   const value = useMemo(
     () => ({
       isConnected,
@@ -172,8 +261,17 @@ export function AgentEventProvider({ children }: { children: ReactNode }) {
       onAgentFailed,
       onWorkflowUpdated,
       onWorkflowCompleted,
+      onConflictDetected,
+      onTaxonomySuggested,
+      onReviewRequested,
+      onReviewCompleted,
     }),
-    [isConnected, joinWorkflow, leaveWorkflow, onAgentStarted, onAgentCompleted, onAgentFailed, onWorkflowUpdated, onWorkflowCompleted],
+    [
+      isConnected, joinWorkflow, leaveWorkflow,
+      onAgentStarted, onAgentCompleted, onAgentFailed,
+      onWorkflowUpdated, onWorkflowCompleted,
+      onConflictDetected, onTaxonomySuggested, onReviewRequested, onReviewCompleted,
+    ],
   )
 
   return (
