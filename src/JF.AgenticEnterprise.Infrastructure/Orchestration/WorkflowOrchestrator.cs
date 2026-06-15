@@ -219,8 +219,20 @@ public sealed class WorkflowOrchestrator : IWorkflowOrchestrator
         _logger.LogInformation("ClassificationAgent started — workflow {WorkflowId}", workflow.Id);
 
         var start = DateTimeOffset.UtcNow;
-        var result = await _classificationAgent.ClassifyAsync(
-            email.Subject, email.BodyPlainText, ct);
+        ClassificationResult result;
+        try
+        {
+            result = await _classificationAgent.ClassifyAsync(
+                email.Subject, email.BodyPlainText, ct);
+        }
+        catch (Exception ex)
+        {
+            execution.Status = AgentExecutionStatus.Failed;
+            execution.ErrorMessage = ex.Message;
+            execution.CompletedAt = DateTimeOffset.UtcNow;
+            await _executionRepo.SaveAsync(execution, ct);
+            throw;
+        }
         var durationMs = (int)(DateTimeOffset.UtcNow - start).TotalMilliseconds;
 
         // Persist classification
@@ -286,9 +298,21 @@ public sealed class WorkflowOrchestrator : IWorkflowOrchestrator
             workflow.Id, classResult.Category);
 
         var start = DateTimeOffset.UtcNow;
-        var result = await _orchestratorAgent.DecideAsync(new OrchestratorRequest(
-            workflow.Id, email.Id,
-            classResult.Category, classResult.Confidence, classResult.Reasoning), ct);
+        OrchestratorResult result;
+        try
+        {
+            result = await _orchestratorAgent.DecideAsync(new OrchestratorRequest(
+                workflow.Id, email.Id,
+                classResult.Category, classResult.Confidence, classResult.Reasoning), ct);
+        }
+        catch (Exception ex)
+        {
+            execution.Status = AgentExecutionStatus.Failed;
+            execution.ErrorMessage = ex.Message;
+            execution.CompletedAt = DateTimeOffset.UtcNow;
+            await _executionRepo.SaveAsync(execution, ct);
+            throw;
+        }
         var durationMs = (int)(DateTimeOffset.UtcNow - start).TotalMilliseconds;
 
         // Persist orchestration decision
@@ -344,8 +368,20 @@ public sealed class WorkflowOrchestrator : IWorkflowOrchestrator
         _logger.LogInformation("InvoiceAgent started — workflow {WorkflowId}", workflow.Id);
 
         var start = DateTimeOffset.UtcNow;
-        var result = await _invoiceAgent.ExtractAsync(new InvoiceExtractionRequest(
-            workflow.Id, email.Id, email.Subject, email.BodyPlainText, attachments), ct);
+        InvoiceAnalysisResult result;
+        try
+        {
+            result = await _invoiceAgent.ExtractAsync(new InvoiceExtractionRequest(
+                workflow.Id, email.Id, email.Subject, email.BodyPlainText, attachments), ct);
+        }
+        catch (Exception ex)
+        {
+            execution.Status = AgentExecutionStatus.Failed;
+            execution.ErrorMessage = ex.Message;
+            execution.CompletedAt = DateTimeOffset.UtcNow;
+            await _executionRepo.SaveAsync(execution, ct);
+            throw;
+        }
         var durationMs = (int)(DateTimeOffset.UtcNow - start).TotalMilliseconds;
 
         var analysisId = UlidGenerator.NewUlid();
@@ -405,8 +441,20 @@ public sealed class WorkflowOrchestrator : IWorkflowOrchestrator
         _logger.LogInformation("ContractAgent started — workflow {WorkflowId}", workflow.Id);
 
         var start = DateTimeOffset.UtcNow;
-        var result = await _contractAgent.ExtractAsync(new ContractExtractionRequest(
-            workflow.Id, email.Id, email.Subject, email.BodyPlainText, attachments), ct);
+        ContractAnalysisResult result;
+        try
+        {
+            result = await _contractAgent.ExtractAsync(new ContractExtractionRequest(
+                workflow.Id, email.Id, email.Subject, email.BodyPlainText, attachments), ct);
+        }
+        catch (Exception ex)
+        {
+            execution.Status = AgentExecutionStatus.Failed;
+            execution.ErrorMessage = ex.Message;
+            execution.CompletedAt = DateTimeOffset.UtcNow;
+            await _executionRepo.SaveAsync(execution, ct);
+            throw;
+        }
         var durationMs = (int)(DateTimeOffset.UtcNow - start).TotalMilliseconds;
 
         var analysisId = UlidGenerator.NewUlid();
