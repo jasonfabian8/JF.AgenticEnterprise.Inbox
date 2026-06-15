@@ -127,6 +127,22 @@ export interface AgentExecutionDto {
   startedAt: string
   completedAt: string | null
   errorMessage: string | null
+  outputPayloadJson: string | null
+}
+
+export interface WorkflowStatus {
+  workflowId: string
+  emailId: string
+  status: string
+  currentStep: string | null
+  outcomeType: string | null
+  startedAt: string
+  completedAt: string | null
+}
+
+export interface AgentExecutionListResponse {
+  workflowId: string
+  executions: AgentExecutionDto[]
 }
 
 export interface WorkflowDetail {
@@ -153,4 +169,15 @@ export const emailApi = {
 
   getWorkflow: (emailId: string) =>
     api.get<WorkflowDetail>(`/emails/${emailId}/workflow`).then(r => r.data),
+}
+
+export const workflowApi = {
+  getStatus: (workflowId: string) =>
+    api.get<WorkflowStatus>(`/workflows/${workflowId}/status`).then(r => r.data),
+
+  getExecutions: (workflowId: string) =>
+    api.get<AgentExecutionListResponse>(`/workflows/${workflowId}/executions`).then(r => r.data),
+
+  execute: (workflowId: string) =>
+    api.post(`/workflows/${workflowId}/execute`).then(r => r.data),
 }

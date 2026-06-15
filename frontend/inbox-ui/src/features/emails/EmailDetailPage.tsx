@@ -4,6 +4,17 @@ import { useQuery } from '@tanstack/react-query'
 import { emailApi } from '@/lib/api/client'
 import { StatusBadge, CategoryBadge } from '@/components/ui/badge'
 import { WorkflowTimeline } from '@/features/workflow/WorkflowTimeline'
+import { AgentActivityPanel } from '@/features/workflow/AgentActivityPanel'
+import { WorkflowVisualization } from '@/features/workflow/WorkflowVisualization'
+
+type AgentNodeStatus = 'pending' | 'running' | 'completed' | 'failed'
+
+function toAgentStatus(execStatus: string | undefined): AgentNodeStatus {
+  if (execStatus === 'COMPLETED') return 'completed'
+  if (execStatus === 'FAILED')    return 'failed'
+  if (execStatus === 'RUNNING')   return 'running'
+  return 'pending'
+}
 
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleString(undefined, {
@@ -37,6 +48,13 @@ export function EmailDetailPage() {
     queryKey: ['email', id],
     queryFn: () => emailApi.get(id!),
     enabled: !!id,
+  })
+
+  const { data: workflow } = useQuery({
+    queryKey: ['workflow', id],
+    queryFn: () => emailApi.getWorkflow(id!),
+    enabled: !!id,
+    retry: false,
   })
 
   if (isLoading) {
@@ -220,10 +238,30 @@ export function EmailDetailPage() {
           </Section>
         )}
 
-        {/* Workflow timeline */}
-        <Section title="Workflow Timeline">
-          <WorkflowTimeline emailId={email.id} />
-        </Section>
+        {/* Workflow visualization + agent activity */}
+        {workflow ? (
+          <>
+            <Section title="Workflow">
+              <WorkflowVisualization
+                emailSubject={email.subject || '(no subject)'}
+                agentStatus={toAgentStatus(workflow.agentExecutions[0]?.status)}
+                classificationCategory={email.classification?.categoryType}
+                classificationConfidence={email.classification?.confidence}
+              />
+            </Section>
+
+            <Section title="Agent Activity">
+              <AgentActivityPanel
+                workflowId={workflow.workflowId}
+                emailId={email.id}
+              />
+            </Section>
+          </>
+        ) : (
+          <Section title="Workflow Timeline">
+            <WorkflowTimeline emailId={email.id} />
+          </Section>
+        )}
 
       </div>
     </div>
