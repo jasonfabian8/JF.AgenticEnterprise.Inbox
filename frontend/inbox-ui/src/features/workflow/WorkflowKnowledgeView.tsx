@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { reasoningApi, type WorkflowKnowledgeDto } from '@/lib/api/client'
 
@@ -20,9 +21,15 @@ function PhaseCard({
   isCurrent,
   isActive,
 }: Readonly<{ phase: Phase; isCurrent: boolean; isActive: boolean }>) {
-  const pct = phase.confidence !== null ? Math.round(phase.confidence * 100) : null
-  const barColor =
-    pct === null ? 'bg-gray-300' : pct >= 85 ? 'bg-green-500' : pct >= 70 ? 'bg-yellow-500' : 'bg-red-500'
+  const pct = phase.confidence === null ? null : Math.round(phase.confidence * 100)
+  let barColor = 'bg-gray-300'
+  if (pct !== null) {
+    if (pct >= 85) barColor = 'bg-green-500'
+    else if (pct >= 70) barColor = 'bg-yellow-500'
+    else barColor = 'bg-red-500'
+  }
+  const barRef = useRef<HTMLDivElement>(null)
+  useEffect(() => { if (barRef.current && pct !== null) barRef.current.style.width = `${pct}%` }, [pct])
 
   return (
     <div
@@ -30,7 +37,7 @@ function PhaseCard({
         border rounded-lg p-3 transition-all
         ${isActive ? 'border-blue-400 bg-blue-50' : 'border-gray-200 bg-white'}
         ${isCurrent ? 'ring-2 ring-blue-500' : ''}
-        ${!phase.category ? 'opacity-40' : ''}
+        ${phase.category ? '' : 'opacity-40'}
       `}
     >
       <div className="flex items-center justify-between mb-2">
@@ -50,7 +57,7 @@ function PhaseCard({
             <div className="mb-2">
               <div className="flex items-center gap-2">
                 <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                  <div className={`h-full ${barColor} rounded-full`} style={{ width: `${pct}%` }} />
+                  <div ref={barRef} className={`h-full ${barColor} rounded-full`} />
                 </div>
                 <span className="text-xs font-mono">{pct}%</span>
               </div>
@@ -106,13 +113,10 @@ function KnowledgeTimeline({ knowledge }: Readonly<{ knowledge: WorkflowKnowledg
     },
   ]
 
-  const currentKey = knowledge.approvedCategory
-    ? 'approved'
-    : knowledge.suggestedCategory
-    ? 'suggested'
-    : knowledge.refinedCategory
-    ? 'refined'
-    : 'initial'
+  let currentKey = 'initial'
+  if (knowledge.approvedCategory) currentKey = 'approved'
+  else if (knowledge.suggestedCategory) currentKey = 'suggested'
+  else if (knowledge.refinedCategory) currentKey = 'refined'
 
   return (
     <div className="space-y-3">

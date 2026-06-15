@@ -7,4 +7,11 @@ public interface IWorkflowOrchestrator
 
     /// <summary>Re-runs agents for an already-created workflow.</summary>
     Task ExecuteAsync(string workflowId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Continues a workflow that was paused for human review.
+    /// Runs the appropriate specialized agent based on the classification category,
+    /// then finalizes the workflow.
+    /// </summary>
+    Task ContinueAfterReviewAsync(string workflowId, string? overrideCategory, CancellationToken ct = default);
 }

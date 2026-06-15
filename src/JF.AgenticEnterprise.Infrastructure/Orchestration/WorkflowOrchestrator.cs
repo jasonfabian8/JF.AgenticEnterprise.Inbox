@@ -140,6 +140,182 @@ public sealed class WorkflowOrchestrator : IWorkflowOrchestrator
         await ExecuteCoreAsync(workflow, email, ct);
     }
 
+    public async Task ContinueAfterReviewAsync(
+        string workflowId, string? overrideCategory, CancellationToken ct = default)
+    {
+        var workflow = await _workflowRepo.GetByIdAsync(workflowId, ct)
+            ?? throw new InvalidOperationException($"Workflow {workflowId} not found.");
+
+        var email = await _emailRepo.GetByIdAsync(workflow.EmailId, ct)
+            ?? throw new InvalidOperationException($"Email {workflow.EmailId} not found.");
+
+        // Retrieve the existing classification
+        var classification = await _classificationRepo.GetByEmailIdAsync(email.Id, ct);
+        if (classification is null)
+        {
+            _logger.LogWarning(
+                "ContinueAfterReview: no classification found for email {EmailId} — completing as human",
+                email.Id);
+            await FinalizeHumanCompletionAsync(workflow, email, "Unknown", NextAgentName.HumanReview, null, null, ct);
+            return;
+        }
+
+        // Use the override category if the human provided one, otherwise keep the classification
+        var resolvedCategory = overrideCategory ?? classification.CategoryType;
+
+        var classResult = new ClassificationResult(
+            resolvedCategory,
+            classification.Confidence,
+            classification.Reasoning ?? string.Empty);
+
+        // Load WorkflowKnowledge once — used for override update and post-agent update below
+        var knowledge = await _knowledgeRepo.GetByWorkflowIdAsync(workflowId, ct);
+
+        // Restore WorkflowKnowledge category if override was supplied
+        if (overrideCategory is not null && knowledge is not null)
+        {
+            knowledge.CurrentCategory  = overrideCategory;
+            knowledge.UpdatedAt        = DateTimeOffset.UtcNow;
+            await _knowledgeRepo.UpdateAsync(knowledge, ct);
+        }
+
+        // Determine which specialized agent to run (non-extractable categories complete directly)
+        var nextAgent = resolvedCategory switch
+        {
+            EmailCategory.Invoice  => NextAgentName.InvoiceAgent,
+            EmailCategory.Contract => NextAgentName.ContractAgent,
+            _                      => NextAgentName.Complete,
+        };
+
+        workflow.Status      = WorkflowStatus.Processing;
+        workflow.CurrentStep = MapNextAgentToStepName(nextAgent);
+        await _workflowRepo.SaveAsync(workflow, ct);
+
+        email.Status = EmailStatus.Processing;
+        await _emailRepo.SaveAsync(email, ct);
+
+        await _broadcaster.BroadcastWorkflowUpdatedAsync(new WorkflowUpdatedEvent(
+            workflow.Id, email.Id, workflow.Status,
+            workflow.CurrentStep, nextAgent,
+            DateTimeOffset.UtcNow), ct);
+
+        string? invoiceAnalysisId = null;
+        string? contractAnalysisId = null;
+        var attachmentContexts = await BuildAttachmentContextsAsync(email, ct);
+
+        if (nextAgent == NextAgentName.InvoiceAgent)
+        {
+            try
+            {
+                var (id, invoiceResult) = await RunInvoiceAgentAsync(workflow, email, attachmentContexts, ct);
+                invoiceAnalysisId = id;
+
+                if (knowledge is not null)
+                {
+                    knowledge.RefinedCategory   = resolvedCategory;
+                    knowledge.RefinedConfidence = invoiceResult.Confidence;
+                    knowledge.RefinedReasoning  = invoiceResult.Summary;
+                    knowledge.CurrentCategory   = resolvedCategory;
+                    knowledge.CurrentConfidence = invoiceResult.Confidence;
+                    knowledge.CurrentReasoning  = invoiceResult.Summary;
+                    knowledge.UpdatedAt         = DateTimeOffset.UtcNow;
+                    await _knowledgeRepo.UpdateAsync(knowledge, ct);
+                }
+            }
+            catch (Exception ex)
+            {
+                await FailWorkflowAsync(workflow, email, AgentTypes.Invoice, null, ex, ct);
+                return;
+            }
+        }
+        else if (nextAgent == NextAgentName.ContractAgent)
+        {
+            try
+            {
+                var (id, contractResult) = await RunContractAgentAsync(workflow, email, attachmentContexts, ct);
+                contractAnalysisId = id;
+
+                var specializedCategory = contractResult.ContractType ?? resolvedCategory;
+                if (knowledge is not null)
+                {
+                    knowledge.RefinedCategory   = specializedCategory;
+                    knowledge.RefinedConfidence = contractResult.Confidence;
+                    knowledge.RefinedReasoning  = contractResult.Reasoning;
+                    knowledge.CurrentCategory   = specializedCategory;
+                    knowledge.CurrentConfidence = contractResult.Confidence;
+                    knowledge.CurrentReasoning  = contractResult.Reasoning;
+                    knowledge.UpdatedAt         = DateTimeOffset.UtcNow;
+                    await _knowledgeRepo.UpdateAsync(knowledge, ct);
+                }
+            }
+            catch (Exception ex)
+            {
+                await FailWorkflowAsync(workflow, email, AgentTypes.Contract, null, ex, ct);
+                return;
+            }
+        }
+
+        await FinalizeHumanCompletionAsync(
+            workflow, email, resolvedCategory, nextAgent,
+            invoiceAnalysisId, contractAnalysisId, ct);
+    }
+
+    private async Task FinalizeHumanCompletionAsync(
+        Workflow workflow, Email email,
+        string category, string nextAgent,
+        string? invoiceAnalysisId, string? contractAnalysisId,
+        CancellationToken ct)
+    {
+        var now = DateTimeOffset.UtcNow;
+
+        var summary = nextAgent switch
+        {
+            NextAgentName.InvoiceAgent  => $"Invoice extracted after human review. Category: {category}.",
+            NextAgentName.ContractAgent => $"Contract analysed after human review. Category: {category}.",
+            _                           => $"Approved by human reviewer. Category: {category} — no further extraction required.",
+        };
+
+        // Update existing WorkflowResult if present, otherwise create one
+        var existingResult = await _workflowResultRepo.GetByWorkflowIdAsync(workflow.Id, ct);
+        var result = existingResult ?? new WorkflowResult
+        {
+            Id        = UlidGenerator.NewUlid(),
+            WorkflowId = workflow.Id,
+            CreatedAt  = now,
+        };
+
+        result.ClassificationCategory   = category;
+        result.ClassificationConfidence = existingResult?.ClassificationConfidence ?? 1f;
+        result.RoutedToAgent            = nextAgent;
+        result.InvoiceAnalysisId        = invoiceAnalysisId ?? result.InvoiceAnalysisId;
+        result.ContractAnalysisId       = contractAnalysisId ?? result.ContractAnalysisId;
+        result.FinalStatus              = WorkflowResultStatus.CompletedHuman;
+        result.Summary                  = summary;
+        result.CompletedAt              = now;
+        await _workflowResultRepo.SaveAsync(result, ct);
+
+        workflow.Status      = WorkflowStatus.CompletedHuman;
+        workflow.CurrentStep = null;
+        workflow.OutcomeType = nextAgent;
+        workflow.CompletedAt = now;
+        await _workflowRepo.SaveAsync(workflow, ct);
+
+        email.Status      = EmailStatus.CompletedHuman;
+        email.ProcessedAt = now;
+        await _emailRepo.SaveAsync(email, ct);
+
+        await _broadcaster.BroadcastWorkflowCompletedAsync(new WorkflowCompletedEvent(
+            workflow.Id, email.Id,
+            WorkflowStatus.CompletedHuman,
+            category, nextAgent,
+            invoiceAnalysisId, contractAnalysisId,
+            now), ct);
+
+        _logger.LogInformation(
+            "Workflow {WorkflowId} completed via human review — category={Category}, agent={Agent}",
+            workflow.Id, category, nextAgent);
+    }
+
     // ── Pipeline ──────────────────────────────────────────────────────────────
 
     private async Task ExecuteCoreAsync(Workflow workflow, Email email, CancellationToken ct)
@@ -479,6 +655,7 @@ public sealed class WorkflowOrchestrator : IWorkflowOrchestrator
         }, ct);
 
         execution.Status          = AgentExecutionStatus.Completed;
+        execution.ReasoningText   = result.Reasoning;
         execution.DurationMs      = durationMs;
         execution.CompletedAt     = DateTimeOffset.UtcNow;
         execution.OutputPayloadJson = JsonSerializer.Serialize(new
@@ -552,6 +729,7 @@ public sealed class WorkflowOrchestrator : IWorkflowOrchestrator
 
         execution.Status          = AgentExecutionStatus.Completed;
         execution.ConfidenceScore = result.Confidence;
+        execution.ReasoningText   = result.Summary ?? string.Empty;
         execution.DurationMs      = durationMs;
         execution.CompletedAt     = DateTimeOffset.UtcNow;
         execution.OutputPayloadJson = result.RawOutputJson;
@@ -623,6 +801,7 @@ public sealed class WorkflowOrchestrator : IWorkflowOrchestrator
 
         execution.Status          = AgentExecutionStatus.Completed;
         execution.ConfidenceScore = result.Confidence;
+        execution.ReasoningText   = result.Reasoning ?? string.Empty;
         execution.DurationMs      = durationMs;
         execution.CompletedAt     = DateTimeOffset.UtcNow;
         execution.OutputPayloadJson = result.RawOutputJson;

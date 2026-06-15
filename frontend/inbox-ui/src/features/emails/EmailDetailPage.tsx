@@ -1,6 +1,6 @@
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { emailApi } from '@/lib/api/client'
 import { StatusBadge, CategoryBadge } from '@/components/ui/badge'
 import { WorkflowGraph } from '@/features/workflow/WorkflowGraph'
@@ -12,6 +12,8 @@ import { WorkflowTimeline } from '@/features/workflow/WorkflowTimeline'
 import { AgentCollaborationView } from '@/features/workflow/AgentCollaborationView'
 import { WorkflowKnowledgeView } from '@/features/workflow/WorkflowKnowledgeView'
 import { ReasoningTimeline } from '@/features/workflow/ReasoningTimeline'
+import { useAgentEvents } from '@/lib/signalr/AgentEventContext'
+import { useEffect } from 'react'
 
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleString(undefined, {
@@ -20,7 +22,7 @@ function fmtDate(iso: string) {
   })
 }
 
-function Section({ title, children }: { title: string; children: ReactNode }) {
+function Section({ title, children }: Readonly<{ title: string; children: ReactNode }>) {
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-5">
       <h2 className="mb-4 text-xs font-semibold uppercase tracking-wide text-gray-400">{title}</h2>
@@ -29,7 +31,7 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   )
 }
 
-function Row({ label, value }: { label: string; value: ReactNode }) {
+function Row({ label, value }: Readonly<{ label: string; value: ReactNode }>) {
   return (
     <div className="flex items-start py-1.5 text-sm">
       <span className="w-36 shrink-0 text-gray-400">{label}</span>
@@ -38,8 +40,15 @@ function Row({ label, value }: { label: string; value: ReactNode }) {
   )
 }
 
+const ACTIVE_STATUSES = new Set(['PROCESSING', 'AWAITING_REVIEW', 'ESCALATED', 'UNDER_REVIEW'])
+
+type WorkflowTab = 'graph' | 'timeline'
+
 export function EmailDetailPage() {
   const { id } = useParams<{ id: string }>()
+  const queryClient = useQueryClient()
+  const { onWorkflowUpdated, onWorkflowCompleted, joinWorkflow, leaveWorkflow } = useAgentEvents()
+  const [activeTab, setActiveTab] = useState<WorkflowTab>('graph')
 
   const { data: email, isLoading, isError } = useQuery({
     queryKey: ['email', id],
@@ -52,7 +61,35 @@ export function EmailDetailPage() {
     queryFn: () => emailApi.getWorkflow(id!),
     enabled: !!id,
     retry: false,
+    // Poll while the workflow is actively processing
+    refetchInterval: (q) => {
+      const status = (q.state.data as { status?: string } | undefined)?.status?.toUpperCase()
+      return status && ACTIVE_STATUSES.has(status) ? 3000 : false
+    },
   })
+
+  // Join the SignalR group for this workflow and invalidate queries on events
+  useEffect(() => {
+    if (!workflow?.workflowId) return
+    const wfId = workflow.workflowId
+    joinWorkflow(wfId)
+
+    const invalidateAll = () => {
+      queryClient.invalidateQueries({ queryKey: ['email', id] })
+      queryClient.invalidateQueries({ queryKey: ['workflow', id] })
+      queryClient.invalidateQueries({ queryKey: ['workflow-knowledge', id] })
+      queryClient.invalidateQueries({ queryKey: ['workflow-timeline', id] })
+    }
+
+    const offUpdated   = onWorkflowUpdated(invalidateAll)
+    const offCompleted = onWorkflowCompleted(invalidateAll)
+
+    return () => {
+      offUpdated()
+      offCompleted()
+      leaveWorkflow(wfId)
+    }
+  }, [workflow?.workflowId, id, joinWorkflow, leaveWorkflow, onWorkflowUpdated, onWorkflowCompleted, queryClient])
 
   if (isLoading) {
     return (
@@ -68,7 +105,6 @@ export function EmailDetailPage() {
     )
   }
 
-  // Sprint 2 analysis — prefer workflow result (richest), fall back to email-level
   const invoiceAnalysis = workflow?.workflowResult?.invoiceAnalysis ?? email.invoiceAnalysis
   const contractAnalysis = workflow?.workflowResult?.contractAnalysis ?? email.contractAnalysis
 
@@ -124,18 +160,49 @@ export function EmailDetailPage() {
         {/* ── Workflow section ────────────────────────────────────────────── */}
         {workflow ? (
           <>
-            {/* Compact status + routing summary */}
             <WorkflowStatusCard workflow={workflow} />
 
-            {/* React Flow graph */}
-            <Section title="Workflow Graph">
-              <WorkflowGraph
-                workflow={workflow}
-                emailSubject={email.subject || '(no subject)'}
-              />
-            </Section>
+            {/* Tabbed: Workflow Graph | Reasoning Timeline */}
+            <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
+              {/* Tab bar */}
+              <div className="flex border-b border-gray-200">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('graph')}
+                  className={`px-5 py-3 text-sm font-medium transition-colors ${
+                    activeTab === 'graph'
+                      ? 'border-b-2 border-blue-500 text-blue-600'
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  Workflow Graph
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('timeline')}
+                  className={`px-5 py-3 text-sm font-medium transition-colors ${
+                    activeTab === 'timeline'
+                      ? 'border-b-2 border-blue-500 text-blue-600'
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  Reasoning Timeline
+                </button>
+              </div>
 
-            {/* Live agent execution cards */}
+              {/* Tab content */}
+              <div className="p-5">
+                {activeTab === 'graph' ? (
+                  <WorkflowGraph
+                    workflow={workflow}
+                    emailSubject={email.subject || '(no subject)'}
+                  />
+                ) : (
+                  <ReasoningTimeline emailId={email.id} />
+                )}
+              </div>
+            </div>
+
             <Section title="Agent Activity">
               <AgentActivityPanel
                 workflowId={workflow.workflowId}
@@ -143,17 +210,12 @@ export function EmailDetailPage() {
               />
             </Section>
 
-            {/* Sprint 3 — multi-agent reasoning */}
-            <Section title="Agent Conflicts">
-              <AgentCollaborationView emailId={email.id} />
-            </Section>
-
             <Section title="Document Understanding">
               <WorkflowKnowledgeView emailId={email.id} />
             </Section>
 
-            <Section title="Reasoning Timeline">
-              <ReasoningTimeline emailId={email.id} />
+            <Section title="Agent Conflicts">
+              <AgentCollaborationView emailId={email.id} />
             </Section>
           </>
         ) : (
@@ -227,9 +289,9 @@ export function EmailDetailPage() {
             <Row
               label="Total"
               value={
-                email.invoiceExtraction.totalAmount != null
-                  ? `${email.invoiceExtraction.currency ?? ''} ${email.invoiceExtraction.totalAmount.toFixed(2)}`
-                  : '—'
+                email.invoiceExtraction.totalAmount == null
+                  ? '—'
+                  : `${email.invoiceExtraction.currency ?? ''} ${email.invoiceExtraction.totalAmount.toFixed(2)}`
               }
             />
             <Row label="Confidence" value={`${Math.round(email.invoiceExtraction.overallConfidence * 100)}%`} />
@@ -249,20 +311,20 @@ export function EmailDetailPage() {
               <div className="mt-4">
                 <p className="mb-2 text-xs font-medium text-gray-400 uppercase tracking-wide">Risk Flags</p>
                 <ul className="space-y-1.5">
-                  {email.contractExtraction.riskFlags.map((f, i) => (
-                    <li key={i} className="flex items-start gap-2 text-xs">
-                      <span
-                        className={
-                          f.severity === 'HIGH' ? 'font-semibold text-red-500'
-                          : f.severity === 'MEDIUM' ? 'font-semibold text-amber-500'
-                          : 'font-semibold text-gray-400'
-                        }
-                      >
+                  {email.contractExtraction.riskFlags.map((f) => {
+                    const SEVERITY_CLASS: Record<string, string> = {
+                      HIGH:   'font-semibold text-red-500',
+                      MEDIUM: 'font-semibold text-amber-500',
+                    }
+                    const severityClass = SEVERITY_CLASS[f.severity] ?? 'font-semibold text-gray-400'
+                    return (
+                    <li key={`${f.flagType}-${f.severity}`} className="flex items-start gap-2 text-xs">
+                      <span className={severityClass}>
                         {f.severity}
                       </span>
                       <span className="text-gray-600">{f.flagType}: {f.excerpt}</span>
                     </li>
-                  ))}
+                  )})}
                 </ul>
               </div>
             )}

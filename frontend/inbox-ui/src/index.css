@@ -23,6 +23,15 @@
   --radius-xl: 0.75rem;
 }
 
+@layer utilities {
+  .bar-fill {
+    width: var(--bar-pct);
+  }
+  .dynamic-height {
+    height: var(--container-h);
+  }
+}
+
 @layer base {
   * {
     box-sizing: border-box;

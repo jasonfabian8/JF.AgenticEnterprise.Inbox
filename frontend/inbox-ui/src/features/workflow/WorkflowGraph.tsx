@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   ReactFlow,
   type Node,
@@ -51,7 +51,9 @@ const BAR_COLOR = (pct: number) => {
 function AgentNode({ data }: Readonly<NodeProps<Node<AgentNodeData>>>) {
   const bgClass = data.isStartNode ? 'bg-blue-50 border-blue-200' : STATUS_BG[data.status]
   const dotClass = STATUS_DOT[data.status]
-  const pct = data.confidence != null ? Math.round(Number(data.confidence) * 100) : null
+  const pct = data.confidence == null ? null : Math.round(Number(data.confidence) * 100)
+  const barRef = useRef<HTMLDivElement>(null)
+  useEffect(() => { if (barRef.current && pct !== null) barRef.current.style.width = `${pct}%` }, [pct])
 
   return (
     <div className={cn('rounded-lg border px-3 py-2.5 shadow-sm w-48', bgClass)}>
@@ -73,10 +75,7 @@ function AgentNode({ data }: Readonly<NodeProps<Node<AgentNodeData>>>) {
       {pct != null && data.status === 'completed' ? (
         <div className="mt-1.5 pl-4">
           <div className="h-1 w-full rounded-full bg-gray-200">
-            <div
-              className={cn('h-1 rounded-full', BAR_COLOR(pct))}
-              style={{ width: `${pct}%` }}
-            />
+            <div ref={barRef} className={cn('h-1 rounded-full', BAR_COLOR(pct))} />
           </div>
           <p className="text-xs text-gray-400 mt-0.5">{pct}% conf</p>
         </div>
@@ -149,10 +148,76 @@ function orchestratorSublabel(
   return 'Awaiting'
 }
 
-function specializedAgentType(nextAgent: string | undefined): string | null {
+function specializedAgentType(
+  nextAgent: string | undefined,
+  executions: AgentExecutionDto[],
+): string | null {
   if (nextAgent === 'InvoiceAgent') return 'InvoiceAgent'
   if (nextAgent === 'ContractAgent') return 'ContractAgent'
+  // After human review, the orchestration decision stays as "HumanReview" but
+  // ContinueAfterReviewAsync may have run a specialized agent — detect it from executions.
+  if (executions.some(e => e.agentType === 'InvoiceAgent')) return 'InvoiceAgent'
+  if (executions.some(e => e.agentType === 'ContractAgent')) return 'ContractAgent'
   return null
+}
+
+// ── Graph section builders ────────────────────────────────────────────────────
+
+function buildHumanReviewSection(
+  specType: string | null,
+  orchStatus: NodeStatus,
+): { node: Node; edge: Edge } {
+  return {
+    node: {
+      id: 'human-review',
+      position: { x: 110, y: 390 },
+      type: 'agentNode',
+      data: {
+        label: 'Human Review',
+        sublabel: specType ? 'Approved' : undefined,
+        status: (specType ? 'completed' : 'idle') satisfies NodeStatus,
+      } satisfies AgentNodeData,
+    },
+    edge: {
+      id: 'e3',
+      source: 'orchestrator',
+      target: 'human-review',
+      type: 'smoothstep',
+      animated: orchStatus === 'running',
+      style: { stroke: '#d1d5db', strokeWidth: 1.5 },
+    },
+  }
+}
+
+function buildSpecializedSection(
+  specType: string,
+  specLabel: string,
+  specStatus: NodeStatus,
+  specExec: AgentExecutionDto | null | undefined,
+  fromNodeId: string,
+  yPos: number,
+): { node: Node; edge: Edge } {
+  return {
+    node: {
+      id: 'specialized',
+      position: { x: 110, y: yPos },
+      type: 'agentNode',
+      data: {
+        label: specLabel,
+        sublabel: specStatus === 'running' ? 'Processing…' : undefined,
+        status: specStatus,
+        confidence: specExec?.confidenceScore ?? undefined,
+      } satisfies AgentNodeData,
+    },
+    edge: {
+      id: fromNodeId === 'orchestrator' ? 'e3' : 'e4',
+      source: fromNodeId,
+      target: 'specialized',
+      type: 'smoothstep',
+      animated: specStatus === 'running',
+      style: { stroke: '#d1d5db', strokeWidth: 1.5 },
+    },
+  }
 }
 
 // ── Graph builder ─────────────────────────────────────────────────────────────
@@ -172,8 +237,8 @@ function buildGraph(
   const classExec   = executions.find(e => e.agentType === 'ClassificationAgent')
 
   const nextAgent   = decision?.nextAgent
-  const specLabel   = labelForNextAgent(nextAgent)
-  const specType    = specializedAgentType(nextAgent)
+  const specType    = specializedAgentType(nextAgent, executions)
+  const specLabel   = specType ? (NEXT_AGENT_LABELS[specType] ?? specType) : labelForNextAgent(nextAgent)
   const specStatus: NodeStatus = specType ? resolveStatus(executions, specType, liveRunning) : 'idle'
   const specExec    = specType ? executions.find(e => e.agentType === specType) : null
 
@@ -231,26 +296,24 @@ function buildGraph(
     },
   ]
 
-  if (specLabel && orchStatus !== 'idle') {
-    nodes.push({
-      id: 'specialized',
-      position: { x: 110, y: 390 },
-      type: 'agentNode',
-      data: {
-        label: specLabel,
-        sublabel: specStatus === 'running' ? 'Processing…' : undefined,
-        status: specStatus,
-        confidence: specExec?.confidenceScore ?? undefined,
-      } satisfies AgentNodeData,
-    })
-    edges.push({
-      id: 'e3',
-      source: 'orchestrator',
-      target: 'specialized',
-      type: 'smoothstep',
-      animated: specStatus === 'running',
-      style: { stroke: '#d1d5db', strokeWidth: 1.5 },
-    })
+  const routedToHumanReview = nextAgent === 'HumanReview'
+  let fromNodeId = 'orchestrator'
+  let specY = 390
+
+  if (routedToHumanReview && orchStatus !== 'idle') {
+    const { node, edge } = buildHumanReviewSection(specType, orchStatus)
+    nodes.push(node)
+    edges.push(edge)
+    fromNodeId = 'human-review'
+    specY = 520
+  }
+
+  if (specType && orchStatus !== 'idle') {
+    const { node, edge } = buildSpecializedSection(
+      specType, specLabel ?? specType, specStatus, specExec, fromNodeId, specY,
+    )
+    nodes.push(node)
+    edges.push(edge)
   }
 
   return { nodes, edges }
@@ -305,12 +368,13 @@ export function WorkflowGraph({ workflow, emailSubject }: Readonly<Props>) {
   )
 
   const hasSpecialized = nodes.length > 3
-  const containerHeight = hasSpecialized ? 480 : 350
 
   return (
     <div
-      className="w-full rounded-lg overflow-hidden border border-gray-100 bg-slate-50"
-      style={{ height: containerHeight }}
+      className={cn(
+        'w-full rounded-lg overflow-hidden border border-gray-100 bg-slate-50',
+        hasSpecialized ? 'h-[480px]' : 'h-[350px]',
+      )}
     >
       <ReactFlow
         nodes={nodes}

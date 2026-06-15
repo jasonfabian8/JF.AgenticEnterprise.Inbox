@@ -1,10 +1,12 @@
 using JF.AgenticEnterprise.Application.DTOs;
+using JF.AgenticEnterprise.Application.Orchestration;
 using JF.AgenticEnterprise.Application.Repositories;
 using JF.AgenticEnterprise.Application.SignalR;
 using JF.AgenticEnterprise.Domain.Entities;
 using JF.AgenticEnterprise.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace JF.AgenticEnterprise.Api.Endpoints;
 
@@ -71,6 +73,8 @@ public static class HumanReviewEndpoints
         IAgentConflictRepository conflictRepo,
         IWorkflowKnowledgeRepository knowledgeRepo,
         IAgentEventBroadcaster broadcaster,
+        IWorkflowOrchestrator orchestrator,
+        IServiceScopeFactory scopeFactory,
         CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(request.Action))
@@ -127,25 +131,39 @@ public static class HumanReviewEndpoints
             }
         }
 
-        // Advance workflow + email status
+        // Advance workflow — approve continues the pipeline; reject marks it failed
         var isApproved = request.Action is ReviewAction.Approve or ReviewAction.ApproveWithCorrections;
-        var finalWorkflowStatus = isApproved ? WorkflowStatus.CompletedHuman : WorkflowStatus.Failed;
-        var finalEmailStatus    = isApproved ? EmailStatus.CompletedHuman    : EmailStatus.Failed;
 
-        var workflow = await workflowRepo.GetByIdAsync(review.WorkflowId, ct);
-        if (workflow is not null)
+        if (isApproved)
         {
-            workflow.Status      = finalWorkflowStatus;
-            workflow.CompletedAt = DateTimeOffset.UtcNow;
-            await workflowRepo.SaveAsync(workflow, ct);
+            // Run the specialized agent in a new DI scope so the background task
+            // has its own DbContext that isn't disposed when the HTTP request ends.
+            var workflowId      = review.WorkflowId;
+            var overrideCategory = request.OverrideCategory;
+            _ = Task.Run(async () =>
+            {
+                await using var scope = scopeFactory.CreateAsyncScope();
+                var orch = scope.ServiceProvider.GetRequiredService<IWorkflowOrchestrator>();
+                await orch.ContinueAfterReviewAsync(workflowId, overrideCategory, CancellationToken.None);
+            });
         }
-
-        var email = await emailRepo.GetByIdAsync(review.EmailId, ct);
-        if (email is not null)
+        else
         {
-            email.Status      = finalEmailStatus;
-            email.ProcessedAt = DateTimeOffset.UtcNow;
-            await emailRepo.SaveAsync(email, ct);
+            var workflow = await workflowRepo.GetByIdAsync(review.WorkflowId, ct);
+            if (workflow is not null)
+            {
+                workflow.Status      = WorkflowStatus.Failed;
+                workflow.CompletedAt = DateTimeOffset.UtcNow;
+                await workflowRepo.SaveAsync(workflow, ct);
+            }
+
+            var email = await emailRepo.GetByIdAsync(review.EmailId, ct);
+            if (email is not null)
+            {
+                email.Status      = EmailStatus.Failed;
+                email.ProcessedAt = DateTimeOffset.UtcNow;
+                await emailRepo.SaveAsync(email, ct);
+            }
         }
 
         // Broadcast review.completed

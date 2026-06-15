@@ -42,9 +42,13 @@ function fmtMs(ms: number) {
   return ms < 1000 ? `${ms} ms` : `${(ms / 1000).toFixed(2)} s`
 }
 
-function ConfidenceBar({ value }: { value: number }) {
+function ConfidenceBar({ value }: Readonly<{ value: number }>) {
   const pct = Math.round(value * 100)
-  const color = pct >= 80 ? 'bg-green-500' : pct >= 50 ? 'bg-amber-400' : 'bg-red-400'
+  let color = 'bg-red-400'
+  if (pct >= 80) color = 'bg-green-500'
+  else if (pct >= 50) color = 'bg-amber-400'
+  const barRef = useRef<HTMLDivElement>(null)
+  useEffect(() => { if (barRef.current) barRef.current.style.width = `${pct}%` }, [pct])
   return (
     <div className="mt-2">
       <div className="flex justify-between text-xs text-gray-400 mb-1">
@@ -52,7 +56,7 @@ function ConfidenceBar({ value }: { value: number }) {
         <span className="font-medium text-gray-700">{pct}%</span>
       </div>
       <div className="h-1.5 w-full rounded-full bg-gray-100">
-        <div className={cn('h-1.5 rounded-full transition-all duration-500', color)} style={{ width: `${pct}%` }} />
+        <div ref={barRef} className={cn('h-1.5 rounded-full transition-all duration-500', color)} />
       </div>
     </div>
   )
@@ -63,10 +67,10 @@ function ConfidenceBar({ value }: { value: number }) {
 function ExecutionCard({
   execution,
   live,
-}: {
+}: Readonly<{
   execution?: AgentExecutionDto
   live?: LiveEvent
-}) {
+}>) {
   const status  = live?.status?.toUpperCase() ?? execution?.status ?? 'PENDING'
   const agent   = live?.agent ?? execution?.agentType ?? 'Unknown Agent'
   const label   = agent.replace('Agent', ' Agent').trim()
@@ -135,7 +139,7 @@ interface Props {
   emailId: string
 }
 
-export function AgentActivityPanel({ workflowId, emailId }: Props) {
+export function AgentActivityPanel({ workflowId, emailId }: Readonly<Props>) {
   const queryClient = useQueryClient()
   const {
     joinWorkflow,
