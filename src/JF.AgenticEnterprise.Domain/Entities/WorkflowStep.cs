@@ -30,6 +30,7 @@ public static class WorkflowStepStatus
 public static class WorkflowStepName
 {
     public const string Classifying          = "CLASSIFYING";
+    public const string Orchestrating        = "ORCHESTRATING";
     public const string AnalyzingDocuments   = "ANALYZING_DOCUMENTS";
     public const string CrossValidating      = "CROSS_VALIDATING";
     public const string ExtractingInvoice    = "EXTRACTING_INVOICE";

@@ -14,9 +14,15 @@ public class Workflow
     public DateTimeOffset CreatedAt { get; set; }
 
     public Email Email { get; set; } = default!;
-    public ICollection<WorkflowStep> Steps { get; set; } = [];
-    public ICollection<AgentExecution> AgentExecutions { get; set; } = [];
-    public ICollection<HumanReview> HumanReviews { get; set; } = [];
+    public ICollection<WorkflowStep>       Steps              { get; set; } = [];
+    public ICollection<AgentExecution>     AgentExecutions    { get; set; } = [];
+    public ICollection<HumanReview>        HumanReviews       { get; set; } = [];
+
+    // ── Sprint 2 nav props ────────────────────────────────────────────────────
+    public OrchestrationDecision? OrchestrationDecision { get; set; }
+    public WorkflowResult?        WorkflowResult        { get; set; }
+    public InvoiceAnalysis?       InvoiceAnalysis       { get; set; }
+    public ContractAnalysis?      ContractAnalysis      { get; set; }
 }
 
 public static class WorkflowStatus

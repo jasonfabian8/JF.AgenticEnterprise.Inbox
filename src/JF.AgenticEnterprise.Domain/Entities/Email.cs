@@ -20,15 +20,19 @@ public class Email
     public bool HumanReviewed { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
 
-    public ICollection<Attachment> Attachments { get; set; } = [];
-    public Workflow? Workflow { get; set; }
-    public Classification? Classification { get; set; }
-    public InvoiceExtraction? InvoiceExtraction { get; set; }
-    public ContractExtraction? ContractExtraction { get; set; }
-    public ICollection<AgentExecution> AgentExecutions { get; set; } = [];
-    public ICollection<HumanReview> HumanReviews { get; set; } = [];
+    public ICollection<Attachment>        Attachments        { get; set; } = [];
+    public Workflow?                      Workflow           { get; set; }
+    public Classification?                Classification     { get; set; }
+    public InvoiceExtraction?             InvoiceExtraction  { get; set; }
+    public ContractExtraction?            ContractExtraction { get; set; }
+    public ICollection<AgentExecution>    AgentExecutions    { get; set; } = [];
+    public ICollection<HumanReview>       HumanReviews       { get; set; } = [];
     public ICollection<TaxonomyCandidate> TaxonomyCandidates { get; set; } = [];
-    public ICollection<AuditEntry> AuditEntries { get; set; } = [];
+    public ICollection<AuditEntry>        AuditEntries       { get; set; } = [];
+
+    // ── Sprint 2 analysis results (populated by Invoice/Contract agents) ───────
+    public InvoiceAnalysis?  InvoiceAnalysis  { get; set; }
+    public ContractAnalysis? ContractAnalysis { get; set; }
 }
 
 public static class EmailStatus
