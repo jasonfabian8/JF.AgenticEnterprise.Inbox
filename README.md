@@ -386,6 +386,24 @@ The inbox becomes the entry point to an intelligent, self-improving digital work
 
 ---
 
+# Configuration
+
+To run the system you need to configure the Azure AI Foundry connection and agent identifiers.
+
+See **[docs/configuration.md](docs/configuration.md)** for:
+
+* All configuration keys and their default values
+* How to set up `appsettings.Development.json` locally (excluded from git)
+* Production secrets management with **Azure Key Vault + Managed Identity**
+* Alternatives: .NET User Secrets and GitHub Actions secrets
+
+> Never commit API keys or Azure endpoints to the repository.  
+> The file `appsettings.Development.json` is listed in `.gitignore` for this reason.
+
+See also **[docs/user-guide.md](docs/user-guide.md)** for a full walkthrough of every screen with screenshots.
+
+---
+
 # Technology Stack
 
 * GitHub Copilot
