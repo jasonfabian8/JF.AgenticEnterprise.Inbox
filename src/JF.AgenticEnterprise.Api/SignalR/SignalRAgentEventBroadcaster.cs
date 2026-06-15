@@ -83,4 +83,68 @@ public sealed class SignalRAgentEventBroadcaster : IAgentEventBroadcaster
                    contractAnalysisId = evt.ContractAnalysisId,
                    timestamp = evt.Timestamp,
                }, ct);
+
+    // ── Sprint 3 — Reasoning / Collaboration events ───────────────────────────
+
+    public Task BroadcastConflictDetectedAsync(ConflictDetectedEvent evt, CancellationToken ct = default)
+        => _hub.Clients
+               .Group(InboxHub.WorkflowGroup(evt.WorkflowId))
+               .SendAsync("conflict.detected", new
+               {
+                   workflowId       = evt.WorkflowId,
+                   emailId          = evt.EmailId,
+                   conflictId       = evt.ConflictId,
+                   conflictType     = evt.ConflictType,
+                   sourceAgent      = evt.SourceAgent,
+                   targetAgent      = evt.TargetAgent,
+                   sourceValue      = evt.SourceValue,
+                   targetValue      = evt.TargetValue,
+                   sourceConfidence = evt.SourceConfidence,
+                   targetConfidence = evt.TargetConfidence,
+                   description      = evt.Description,
+                   timestamp        = evt.Timestamp,
+               }, ct);
+
+    public Task BroadcastTaxonomySuggestedAsync(TaxonomySuggestedEvent evt, CancellationToken ct = default)
+        => _hub.Clients
+               .Group(InboxHub.WorkflowGroup(evt.WorkflowId))
+               .SendAsync("taxonomy.suggested", new
+               {
+                   workflowId        = evt.WorkflowId,
+                   emailId           = evt.EmailId,
+                   proposalId        = evt.ProposalId,
+                   suggestedCategory = evt.SuggestedCategory,
+                   confidence        = evt.Confidence,
+                   reasoning         = evt.Reasoning,
+                   timestamp         = evt.Timestamp,
+               }, ct);
+
+    public Task BroadcastReviewRequestedAsync(ReviewRequestedEvent evt, CancellationToken ct = default)
+        => _hub.Clients
+               .Group(InboxHub.WorkflowGroup(evt.WorkflowId))
+               .SendAsync("review.requested", new
+               {
+                   workflowId     = evt.WorkflowId,
+                   emailId        = evt.EmailId,
+                   reviewId       = evt.ReviewId,
+                   reviewType     = evt.ReviewType,
+                   priority       = evt.Priority,
+                   question       = evt.Question,
+                   recommendation = evt.Recommendation,
+                   timestamp      = evt.Timestamp,
+               }, ct);
+
+    public Task BroadcastReviewCompletedAsync(ReviewCompletedEvent evt, CancellationToken ct = default)
+        => _hub.Clients
+               .Group(InboxHub.WorkflowGroup(evt.WorkflowId))
+               .SendAsync("review.completed", new
+               {
+                   workflowId       = evt.WorkflowId,
+                   emailId          = evt.EmailId,
+                   reviewId         = evt.ReviewId,
+                   action           = evt.Action,
+                   reviewerId       = evt.ReviewerId,
+                   overrideCategory = evt.OverrideCategory,
+                   timestamp        = evt.Timestamp,
+               }, ct);
 }

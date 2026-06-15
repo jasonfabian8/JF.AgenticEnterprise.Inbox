@@ -49,3 +49,63 @@ public sealed record WorkflowCompletedEvent(
     string? InvoiceAnalysisId,
     string? ContractAnalysisId,
     DateTimeOffset Timestamp);
+
+// ── Sprint 3 — Reasoning / Collaboration events ───────────────────────────────
+
+/// <summary>
+/// Emitted when two agents disagree on category or confidence falls below threshold.
+/// Frontend: shows the conflict card in the Agent Collaboration View.
+/// </summary>
+public sealed record ConflictDetectedEvent(
+    string WorkflowId,
+    string EmailId,
+    string ConflictId,
+    string ConflictType,
+    string SourceAgent,
+    string TargetAgent,
+    string? SourceValue,
+    string? TargetValue,
+    float SourceConfidence,
+    float TargetConfidence,
+    string Description,
+    DateTimeOffset Timestamp);
+
+/// <summary>
+/// Emitted when Taxonomy-Evolution-Agent suggests a new or different category.
+/// Frontend: shows the taxonomy panel notification badge.
+/// </summary>
+public sealed record TaxonomySuggestedEvent(
+    string WorkflowId,
+    string EmailId,
+    string ProposalId,
+    string SuggestedCategory,
+    float Confidence,
+    string Reasoning,
+    DateTimeOffset Timestamp);
+
+/// <summary>
+/// Emitted when Human-Collaboration-Agent creates a HumanReview task.
+/// Frontend: increments the review queue badge and shows a toast.
+/// </summary>
+public sealed record ReviewRequestedEvent(
+    string WorkflowId,
+    string EmailId,
+    string ReviewId,
+    string ReviewType,
+    string Priority,
+    string Question,
+    string Recommendation,
+    DateTimeOffset Timestamp);
+
+/// <summary>
+/// Emitted when a human reviewer submits their decision.
+/// Frontend: removes the item from the review queue and updates the reasoning timeline.
+/// </summary>
+public sealed record ReviewCompletedEvent(
+    string WorkflowId,
+    string EmailId,
+    string ReviewId,
+    string Action,
+    string ReviewerId,
+    string? OverrideCategory,
+    DateTimeOffset Timestamp);

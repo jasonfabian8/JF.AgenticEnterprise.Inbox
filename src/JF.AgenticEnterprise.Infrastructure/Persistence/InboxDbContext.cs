@@ -30,6 +30,10 @@ public class InboxDbContext : DbContext
     public DbSet<ContractAnalysis> ContractAnalyses => Set<ContractAnalysis>();
     public DbSet<WorkflowResult> WorkflowResults => Set<WorkflowResult>();
 
+    // ── Sprint 3 ──────────────────────────────────────────────────────────────
+    public DbSet<AgentConflict> AgentConflicts => Set<AgentConflict>();
+    public DbSet<WorkflowKnowledge> WorkflowKnowledge => Set<WorkflowKnowledge>();
+
     // Store all DateTimeOffset values as INTEGER (Unix ms) so SQLite can sort/filter them.
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
@@ -60,6 +64,12 @@ public class InboxDbContext : DbContext
         ConfigureInvoiceAnalysis(modelBuilder);
         ConfigureContractAnalysis(modelBuilder);
         ConfigureWorkflowResult(modelBuilder);
+
+        // Sprint 3
+        ConfigureAgentConflict(modelBuilder);
+        ConfigureWorkflowKnowledge(modelBuilder);
+        ConfigureHumanReviewSprint3(modelBuilder);
+        ConfigureTaxonomyProposalSprint3(modelBuilder);
     }
 
     // ── Sprint 1 configurations (unchanged) ──────────────────────────────────
@@ -383,6 +393,77 @@ public class InboxDbContext : DbContext
              .HasForeignKey(x => x.ContractAnalysisId)
              .OnDelete(DeleteBehavior.SetNull)
              .IsRequired(false);
+        });
+    }
+
+    // ── Sprint 3 configurations ───────────────────────────────────────────────
+
+    private static void ConfigureAgentConflict(ModelBuilder m)
+    {
+        m.Entity<AgentConflict>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.HasIndex(x => x.WorkflowId);
+            e.HasIndex(x => new { x.WorkflowId, x.ConflictType });
+
+            e.HasOne(x => x.Workflow)
+             .WithMany(x => x.AgentConflicts)
+             .HasForeignKey(x => x.WorkflowId)
+             .OnDelete(DeleteBehavior.Cascade);
+
+            e.HasOne(x => x.Email)
+             .WithMany()
+             .HasForeignKey(x => x.EmailId)
+             .OnDelete(DeleteBehavior.Restrict);
+
+            e.HasMany(x => x.HumanReviews)
+             .WithOne(x => x.Conflict)
+             .HasForeignKey(x => x.ConflictId)
+             .OnDelete(DeleteBehavior.SetNull)
+             .IsRequired(false);
+        });
+    }
+
+    private static void ConfigureWorkflowKnowledge(ModelBuilder m)
+    {
+        m.Entity<WorkflowKnowledge>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.HasIndex(x => x.WorkflowId).IsUnique();
+
+            e.HasOne(x => x.Workflow)
+             .WithOne(x => x.WorkflowKnowledge)
+             .HasForeignKey<WorkflowKnowledge>(x => x.WorkflowId)
+             .OnDelete(DeleteBehavior.Cascade);
+
+            e.HasOne(x => x.Email)
+             .WithMany()
+             .HasForeignKey(x => x.EmailId)
+             .OnDelete(DeleteBehavior.Restrict);
+        });
+    }
+
+    // Adds Sprint 3 columns to the existing HumanReview table via shadow migration.
+    private static void ConfigureHumanReviewSprint3(ModelBuilder m)
+    {
+        m.Entity<HumanReview>(e =>
+        {
+            // ConflictId FK is optional — set on the relationship defined in ConfigureAgentConflict.
+            // ConflictId column itself is configured here via shadow property if needed;
+            // EF Core auto-discovers it from the nav prop, so nothing extra required.
+            e.Property(x => x.ConflictId).IsRequired(false);
+            e.Property(x => x.OverrideCategory).IsRequired(false);
+        });
+    }
+
+    // Adds Sprint 3 columns (WorkflowId, EmailId) to the existing TaxonomyProposal table.
+    private static void ConfigureTaxonomyProposalSprint3(ModelBuilder m)
+    {
+        m.Entity<TaxonomyProposal>(e =>
+        {
+            e.Property(x => x.WorkflowId).IsRequired(false);
+            e.Property(x => x.EmailId).IsRequired(false);
+            e.HasIndex(x => x.WorkflowId);
         });
     }
 }
