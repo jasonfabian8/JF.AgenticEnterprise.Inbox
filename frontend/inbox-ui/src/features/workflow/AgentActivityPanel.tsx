@@ -200,6 +200,8 @@ export function AgentActivityPanel({ workflowId, emailId }: Props) {
         new Map(prev).set(p.agent, { agent: p.agent, status: 'failed', error: p.error }),
       )
       void queryClient.invalidateQueries({ queryKey: ['workflow-executions', workflowId] })
+      void queryClient.invalidateQueries({ queryKey: ['workflow', emailId] })
+      void queryClient.invalidateQueries({ queryKey: ['email', emailId] })
     })
 
     // Workflow-level events — refresh persisted data so WorkflowGraph + analysis views update

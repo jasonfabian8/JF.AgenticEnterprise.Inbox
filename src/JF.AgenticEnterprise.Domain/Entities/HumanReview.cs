@@ -21,8 +21,18 @@ public class HumanReview
     public int ReviewDurationSeconds { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
 
+    /// <summary>Optional link to the AgentConflict that triggered this review.</summary>
+    public string? ConflictId { get; set; }
+
+    /// <summary>
+    /// When Action == APPROVE_WITH_CORRECTIONS or a human override, stores the
+    /// chosen category or value that overrides all agent conclusions.
+    /// </summary>
+    public string? OverrideCategory { get; set; }
+
     public Email Email { get; set; } = default!;
     public Workflow Workflow { get; set; } = default!;
+    public AgentConflict? Conflict { get; set; }
 }
 
 public static class ReviewStatus

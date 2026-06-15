@@ -1,38 +1,37 @@
 namespace JF.AgenticEnterprise.Infrastructure.Agents;
 
+/// <summary>
+/// Runtime configuration for the AI inference layer.
+/// Secrets (ApiKey) must live in appsettings.Development.json, never in source control.
+/// </summary>
 public sealed class AiProviderOptions
 {
     public const string Section = "AiProvider";
 
-    /// <summary>"OpenAI", "AzureOpenAI", or "AzureAIFoundry"</summary>
-    public string Type { get; set; } = "OpenAI";
+    public string Type { get; set; } = "AzureAIFoundry";
 
-    public string ApiKey { get; set; } = string.Empty;
+    /// <summary>
+    /// Project-scoped endpoint.
+    /// Format: https://{resource}.services.ai.azure.com/api/projects/{project-name}
+    /// </summary>
+    public string Endpoint { get; set; } = string.Empty;
 
-    /// <summary>Model ID for OpenAI/AzureOpenAI; ignored for AzureAIFoundry (agent IDs used instead).</summary>
-    public string ModelId { get; set; } = "gpt-4o-mini";
+    /// <summary>Underlying model used by all agents (for reference / logging).</summary>
+    public string ModelId { get; set; } = "gpt-4.1-mini";
 
-    /// <summary>Required for AzureOpenAI and AzureAIFoundry.</summary>
-    public string? Endpoint { get; set; }
+    // ── Prompt Agent names + active versions as deployed in Azure AI Foundry ──
+    // Name is passed to AgentReference(name, version).
+    // Version targets the specific published snapshot — update when you publish a new version.
 
-    // ── Foundry agent IDs ─────────────────────────────────────────────────────
-    // Configured in appsettings.Development.json (not committed to source control)
+    public string ClassificationAgentId      { get; set; } = "Classification-Agent";
+    public string ClassificationAgentVersion { get; set; } = "5";
 
-    /// <summary>Azure AI Foundry agent ID for email classification.</summary>
-    public string ClassificationAgentId { get; set; } = "Classification-Agent";
+    public string OrchestratorAgentId      { get; set; } = "Orchestrator-Agent";
+    public string OrchestratorAgentVersion { get; set; } = "1";
 
-    /// <summary>Azure AI Foundry agent ID for invoice field extraction (Sprint 2).</summary>
-    public string InvoiceExtractionAgentId { get; set; } = "InvoiceExtraction-Agent";
+    public string InvoiceAgentId      { get; set; } = "Invoice-Agent";
+    public string InvoiceAgentVersion { get; set; } = "1";
 
-    /// <summary>Azure AI Foundry agent ID for contract field extraction (Sprint 3).</summary>
-    public string ContractExtractionAgentId { get; set; } = "Contract-Agent";
-
-    /// <summary>Azure AI Foundry agent ID for taxonomy evolution (Sprint 4).</summary>
-    public string TaxonomyEvolutionAgentId { get; set; } = "Taxonomy-Evolution-Agent";
-
-    /// <summary>Azure AI Foundry agent ID for human-in-the-loop collaboration (Sprint 4).</summary>
-    public string HumanCollaborationAgentId { get; set; } = "Human-Collaboration-Agent";
-
-    /// <summary>Azure AI Foundry orchestrator agent ID.</summary>
-    public string OrchestratorAgentId { get; set; } = "Orchestrator-Agent";
+    public string ContractAgentId      { get; set; } = "Contract-Agent";
+    public string ContractAgentVersion { get; set; } = "1";
 }

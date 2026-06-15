@@ -47,16 +47,18 @@ public static class DependencyInjection
         var section = configuration.GetSection(AiProviderOptions.Section);
         var aiOptions = new AiProviderOptions
         {
-            Type = section["Type"] ?? "AzureAIFoundry",
-            ApiKey = section["ApiKey"] ?? string.Empty,
-            ModelId = section["ModelId"] ?? string.Empty,
-            Endpoint = section["Endpoint"],
-            ClassificationAgentId = section["ClassificationAgentId"] ?? "Classification-Agent",
-            InvoiceExtractionAgentId = section["InvoiceExtractionAgentId"] ?? "Invoice-Agent",
-            ContractExtractionAgentId = section["ContractExtractionAgentId"] ?? "Contract-Agent",
-            TaxonomyEvolutionAgentId = section["TaxonomyEvolutionAgentId"] ?? "Taxonomy-Evolution-Agent",
-            HumanCollaborationAgentId = section["HumanCollaborationAgentId"] ?? "Human-Collaboration-Agent",
-            OrchestratorAgentId = section["OrchestratorAgentId"] ?? "Orchestrator-Agent",
+            Type     = section["Type"]     ?? "AzureAIFoundry",
+            Endpoint = section["Endpoint"] ?? string.Empty,
+            ModelId  = section["ModelId"]  ?? "gpt-4.1-mini",
+            // Prompt Agent names + active versions as deployed in Foundry
+            ClassificationAgentId      = section["ClassificationAgentId"]      ?? "Classification-Agent",
+            ClassificationAgentVersion = section["ClassificationAgentVersion"] ?? "5",
+            OrchestratorAgentId        = section["OrchestratorAgentId"]        ?? "Orchestrator-Agent",
+            OrchestratorAgentVersion   = section["OrchestratorAgentVersion"]   ?? "1",
+            InvoiceAgentId             = section["InvoiceAgentId"]             ?? "Invoice-Agent",
+            InvoiceAgentVersion        = section["InvoiceAgentVersion"]        ?? "1",
+            ContractAgentId            = section["ContractAgentId"]            ?? "Contract-Agent",
+            ContractAgentVersion       = section["ContractAgentVersion"]       ?? "1",
         };
         services.AddSingleton(aiOptions);
 

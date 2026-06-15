@@ -38,14 +38,17 @@ public sealed class ContractAgent : IContractAgent
         }
         """;
 
+    private readonly string _agentVersion;
+
     public ContractAgent(
         IAgentRuntime runtime,
         AiProviderOptions options,
         ILogger<ContractAgent> logger)
     {
-        _runtime = runtime;
-        _agentId = options.ContractExtractionAgentId;
-        _logger = logger;
+        _runtime      = runtime;
+        _agentId      = options.ContractAgentId;
+        _agentVersion = options.ContractAgentVersion;
+        _logger       = logger;
     }
 
     public async Task<ContractAnalysisResult> ExtractAsync(
@@ -58,7 +61,7 @@ public sealed class ContractAgent : IContractAgent
             "ContractAgent invoking {AgentId} for email {EmailId}", _agentId, request.EmailId);
 
         var response = await _runtime.InvokeAsync(
-            new AgentRuntimeRequest(_agentId, SystemPrompt, userMessage), ct);
+            new AgentRuntimeRequest(_agentId, _agentVersion, SystemPrompt, userMessage), ct);
 
         var result = ParseResponse(response.Content);
 

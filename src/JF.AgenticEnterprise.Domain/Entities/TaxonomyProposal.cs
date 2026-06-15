@@ -4,6 +4,13 @@ public class TaxonomyProposal
 {
     public string Id { get; set; } = default!;
     public string SuggestedLabel { get; set; } = default!;
+
+    /// <summary>
+    /// Workflow that triggered this proposal via Taxonomy-Evolution-Agent.
+    /// Null for proposals created outside a workflow context.
+    /// </summary>
+    public string? WorkflowId { get; set; }
+    public string? EmailId { get; set; }
     public string Status { get; set; } = "PENDING";
     public float Confidence { get; set; }
     public int SampleCount { get; set; }
