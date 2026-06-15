@@ -2,7 +2,9 @@ using JF.AgenticEnterprise.Application.DTOs;
 using JF.AgenticEnterprise.Application.Repositories;
 using JF.AgenticEnterprise.Application.SignalR;
 using JF.AgenticEnterprise.Domain.Entities;
+using JF.AgenticEnterprise.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace JF.AgenticEnterprise.Api.Endpoints;
 
@@ -23,6 +25,10 @@ public static class HumanReviewEndpoints
         group.MapPost("/{id}/decide", DecideReview)
              .WithName("DecideReview")
              .WithSummary("Submit a human decision (approve / reject / override) for a review");
+
+        group.MapPost("/backfill", BackfillAwaitingReview)
+             .WithName("BackfillAwaitingReview")
+             .WithSummary("Dev utility: creates HumanReview records for workflows stuck in AWAITING_REVIEW without one");
 
         return app;
     }
@@ -61,6 +67,7 @@ public static class HumanReviewEndpoints
         [FromBody] HumanReviewDecisionRequest request,
         IHumanReviewRepository reviewRepo,
         IWorkflowRepository workflowRepo,
+        IEmailRepository emailRepo,
         IAgentConflictRepository conflictRepo,
         IWorkflowKnowledgeRepository knowledgeRepo,
         IAgentEventBroadcaster broadcaster,
@@ -120,15 +127,25 @@ public static class HumanReviewEndpoints
             }
         }
 
-        // Advance workflow status
+        // Advance workflow + email status
+        var isApproved = request.Action is ReviewAction.Approve or ReviewAction.ApproveWithCorrections;
+        var finalWorkflowStatus = isApproved ? WorkflowStatus.CompletedHuman : WorkflowStatus.Failed;
+        var finalEmailStatus    = isApproved ? EmailStatus.CompletedHuman    : EmailStatus.Failed;
+
         var workflow = await workflowRepo.GetByIdAsync(review.WorkflowId, ct);
         if (workflow is not null)
         {
-            workflow.Status = request.Action == ReviewAction.Approve ||
-                              request.Action == ReviewAction.ApproveWithCorrections
-                ? WorkflowStatus.CompletedHuman
-                : WorkflowStatus.Failed;
+            workflow.Status      = finalWorkflowStatus;
+            workflow.CompletedAt = DateTimeOffset.UtcNow;
             await workflowRepo.SaveAsync(workflow, ct);
+        }
+
+        var email = await emailRepo.GetByIdAsync(review.EmailId, ct);
+        if (email is not null)
+        {
+            email.Status      = finalEmailStatus;
+            email.ProcessedAt = DateTimeOffset.UtcNow;
+            await emailRepo.SaveAsync(email, ct);
         }
 
         // Broadcast review.completed
@@ -142,6 +159,43 @@ public static class HumanReviewEndpoints
             DateTimeOffset.UtcNow), ct);
 
         return Results.Ok(MapDto(review));
+    }
+
+    // ── POST /api/v1/reviews/backfill ─────────────────────────────────────────
+
+    private static async Task<IResult> BackfillAwaitingReview(
+        InboxDbContext db,
+        IHumanReviewRepository reviewRepo,
+        CancellationToken ct)
+    {
+        var stuck = await db.Workflows
+            .Where(w => w.Status == WorkflowStatus.AwaitingReview)
+            .ToListAsync(ct);
+
+        int created = 0;
+        foreach (var workflow in stuck)
+        {
+            var existing = await reviewRepo.GetByWorkflowIdAsync(workflow.Id, ct);
+            if (existing.Count > 0) continue;
+
+            var review = new HumanReview
+            {
+                Id              = Domain.Common.UlidGenerator.NewUlid(),
+                EmailId         = workflow.EmailId,
+                WorkflowId      = workflow.Id,
+                ReviewType      = "CLASSIFICATION_REVIEW",
+                Priority        = ReviewPriority.Normal,
+                Status          = ReviewStatus.Pending,
+                Reason          = "Backfilled: workflow was in AWAITING_REVIEW without a review task.",
+                AgentConfidence = 0f,
+                QueuedAt        = workflow.StartedAt,
+                CreatedAt       = DateTimeOffset.UtcNow,
+            };
+            await reviewRepo.SaveAsync(review, ct);
+            created++;
+        }
+
+        return Results.Ok(new { backfilled = created, total = stuck.Count });
     }
 
     // ── Mapper ────────────────────────────────────────────────────────────────

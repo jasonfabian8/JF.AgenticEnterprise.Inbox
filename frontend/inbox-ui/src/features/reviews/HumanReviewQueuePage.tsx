@@ -27,35 +27,42 @@ function ReviewDecideForm({
     },
   })
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault()
     mutate({
       action,
       reviewerId: 'human-reviewer',
       reviewerNote: reviewerNote || undefined,
-      overrideCategory: action === 'OVERRIDE' ? overrideCategory : undefined,
+      overrideCategory: action === 'APPROVE_WITH_CORRECTIONS' ? overrideCategory : undefined,
     })
   }
 
   return (
     <form onSubmit={handleSubmit} className="mt-4 border-t pt-4 space-y-3">
       <div>
-        <label className="text-xs font-medium text-gray-700 block mb-1">Decision</label>
+        <label htmlFor="decision-select" className="text-xs font-medium text-gray-700 block mb-1">
+          Decision
+        </label>
         <select
+          id="decision-select"
+          title="Select your decision"
           value={action}
           onChange={e => setAction(e.target.value)}
           className="w-full text-sm border rounded px-2 py-1.5"
         >
           <option value="APPROVE">Approve recommendation</option>
           <option value="REJECT">Reject — keep current category</option>
-          <option value="OVERRIDE">Override with custom category</option>
+          <option value="APPROVE_WITH_CORRECTIONS">Override with custom category</option>
         </select>
       </div>
 
-      {action === 'OVERRIDE' && (
+      {action === 'APPROVE_WITH_CORRECTIONS' && (
         <div>
-          <label className="text-xs font-medium text-gray-700 block mb-1">Override Category</label>
+          <label htmlFor="override-category" className="text-xs font-medium text-gray-700 block mb-1">
+            Override Category
+          </label>
           <input
+            id="override-category"
             type="text"
             value={overrideCategory}
             onChange={e => setOverrideCategory(e.target.value)}
@@ -67,8 +74,11 @@ function ReviewDecideForm({
       )}
 
       <div>
-        <label className="text-xs font-medium text-gray-700 block mb-1">Note (optional)</label>
+        <label htmlFor="reviewer-note" className="text-xs font-medium text-gray-700 block mb-1">
+          Note (optional)
+        </label>
         <textarea
+          id="reviewer-note"
           value={reviewerNote}
           onChange={e => setReviewerNote(e.target.value)}
           rows={2}
@@ -127,6 +137,7 @@ function ReviewCard({ review }: Readonly<{ review: HumanReviewDto }>) {
       )}
 
       <button
+        type="button"
         onClick={() => setExpanded(v => !v)}
         className="mt-3 text-xs text-blue-600 hover:underline"
       >

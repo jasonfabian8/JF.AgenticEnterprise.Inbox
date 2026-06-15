@@ -208,6 +208,40 @@ public sealed class WorkflowOrchestrator : IWorkflowOrchestrator
         string? contractAnalysisId = null;
         AgentConflict? categoryConflict = null;
 
+        // When the orchestrator routes directly to Human Review (no specialized agent),
+        // create a HumanReview record immediately so it appears in the queue.
+        if (orchResult.NextAgent == NextAgentName.HumanReview)
+        {
+            var review = new HumanReview
+            {
+                Id              = UlidGenerator.NewUlid(),
+                EmailId         = email.Id,
+                WorkflowId      = workflow.Id,
+                ReviewType      = "CLASSIFICATION_REVIEW",
+                Priority        = ReviewPriority.Normal,
+                Status          = ReviewStatus.Pending,
+                Reason          = orchResult.Reasoning,
+                AgentConfidence = classResult.Confidence,
+                ConflictId      = null,
+                QueuedAt        = DateTimeOffset.UtcNow,
+                CreatedAt       = DateTimeOffset.UtcNow,
+            };
+            await _reviewRepo.SaveAsync(review, ct);
+
+            await _broadcaster.BroadcastReviewRequestedAsync(new ReviewRequestedEvent(
+                workflow.Id, email.Id,
+                review.Id,
+                review.ReviewType,
+                review.Priority,
+                orchResult.Reasoning,
+                $"Orchestrator routed to human review. Category: {classResult.Category} ({classResult.Confidence:P0} confidence).",
+                DateTimeOffset.UtcNow), ct);
+
+            _logger.LogInformation(
+                "Orchestrator routed directly to Human Review — created HumanReview {ReviewId}",
+                review.Id);
+        }
+
         if (orchResult.NextAgent == NextAgentName.InvoiceAgent)
         {
             try

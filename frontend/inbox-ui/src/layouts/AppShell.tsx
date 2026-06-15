@@ -6,7 +6,7 @@ import { reviewApi, taxonomyApi } from '@/lib/api/client'
 
 const NAV = [
   { to: '/inbox',     label: 'Inbox',     icon: '📥' },
-  { to: '/simulator', label: 'Simulador', icon: '✉️' },
+  { to: '/simulator', label: 'Simulator', icon: '✉️' },
   { to: '/dashboard', label: 'Dashboard', icon: '📊' },
   { to: '/reviews',   label: 'Reviews',   icon: '👤', badgeKey: 'reviews'  },
   { to: '/taxonomy',  label: 'Taxonomy',  icon: '🏷️', badgeKey: 'taxonomy' },
