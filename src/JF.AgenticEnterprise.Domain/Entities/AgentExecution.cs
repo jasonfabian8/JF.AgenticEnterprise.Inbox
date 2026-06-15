@@ -23,6 +23,14 @@ public class AgentExecution
     public Email Email { get; set; } = default!;
 }
 
+public static class AgentExecutionStatus
+{
+    public const string Pending   = "PENDING";
+    public const string Running   = "RUNNING";
+    public const string Completed = "COMPLETED";
+    public const string Failed    = "FAILED";
+}
+
 public static class AgentTypes
 {
     public const string Orchestrator        = "OrchestratorAgent";
