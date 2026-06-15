@@ -4,6 +4,7 @@ import { useAgentEvents } from '@/lib/signalr/AgentEventContext'
 
 const NAV = [
   { to: '/inbox', label: 'Inbox', icon: '📥' },
+  { to: '/simulator', label: 'Simulador', icon: '✉️' },
   { to: '/dashboard', label: 'Dashboard', icon: '📊' },
 ]
 

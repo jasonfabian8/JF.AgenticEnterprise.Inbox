@@ -210,6 +210,30 @@ export interface WorkflowDetail {
 
 // ── API functions ─────────────────────────────────────────────────────────────
 
+// ── Ingest request / response ─────────────────────────────────────────────────
+
+export interface AttachmentIngestDto {
+  filename: string
+  mimeType: string
+  sizeBytes: number
+}
+
+export interface IngestEmailRequest {
+  senderEmail: string
+  senderName: string
+  subject: string
+  bodyPlainText: string
+  bodyHtml?: string
+  receivedAt?: string
+  attachments?: AttachmentIngestDto[]
+}
+
+export interface IngestEmailResponse {
+  emailId: string
+  status: string
+  ingestedAt: string
+}
+
 export const emailApi = {
   list: (page = 1, pageSize = 20, status?: string, categoryType?: string) =>
     api.get<EmailListResponse>('/emails', {
@@ -221,6 +245,9 @@ export const emailApi = {
 
   getWorkflow: (emailId: string) =>
     api.get<WorkflowDetail>(`/emails/${emailId}/workflow`).then(r => r.data),
+
+  ingest: (request: IngestEmailRequest) =>
+    api.post<IngestEmailResponse>('/emails/ingest', request).then(r => r.data),
 }
 
 export const workflowApi = {
