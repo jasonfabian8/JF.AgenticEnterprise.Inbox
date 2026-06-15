@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/JF.AgenticEnterprise.Api/JF.AgenticEnterprise.Api.csproj" />
+    <Project Path="src/JF.AgenticEnterprise.Application/JF.AgenticEnterprise.Application.csproj" />
+    <Project Path="src/JF.AgenticEnterprise.Domain/JF.AgenticEnterprise.Domain.csproj" />
+    <Project Path="src/JF.AgenticEnterprise.Infrastructure/JF.AgenticEnterprise.Infrastructure.csproj" />
+  </Folder>
+</Solution>
