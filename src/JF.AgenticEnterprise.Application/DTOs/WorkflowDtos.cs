@@ -1,6 +1,6 @@
 namespace JF.AgenticEnterprise.Application.DTOs;
 
-// ── Workflow detail (existing — returned by GET /emails/{id}/workflow) ────────
+// ── Workflow detail (GET /emails/{id}/workflow) ───────────────────────────────
 
 public record WorkflowDetailDto(
     string WorkflowId,
@@ -10,7 +10,9 @@ public record WorkflowDetailDto(
     DateTimeOffset? CompletedAt,
     string? OutcomeType,
     List<WorkflowStepDto> Steps,
-    List<AgentExecutionDto> AgentExecutions);
+    List<AgentExecutionDto> AgentExecutions,
+    OrchestrationDecisionDto? OrchestrationDecision,
+    WorkflowResultDto? WorkflowResult);
 
 public record WorkflowStepDto(
     string Id,
@@ -37,7 +39,54 @@ public record AgentExecutionDto(
     string? ErrorMessage,
     string? OutputPayloadJson);
 
-// ── Workflow status (GET /api/v1/workflows/{workflowId}/status) ───────────────
+// ── Orchestration decision ────────────────────────────────────────────────────
+
+public record OrchestrationDecisionDto(
+    string ClassificationCategory,
+    string NextAgent,
+    string WorkflowStatus,
+    string Reasoning,
+    DateTimeOffset DecidedAt);
+
+// ── Workflow result aggregate ─────────────────────────────────────────────────
+
+public record WorkflowResultDto(
+    string FinalStatus,
+    string ClassificationCategory,
+    float ClassificationConfidence,
+    string RoutedToAgent,
+    string Summary,
+    DateTimeOffset CompletedAt,
+    InvoiceAnalysisDto? InvoiceAnalysis,
+    ContractAnalysisDto? ContractAnalysis);
+
+// ── Specialized analysis DTOs ─────────────────────────────────────────────────
+
+public record InvoiceAnalysisDto(
+    string Id,
+    string? Supplier,
+    string? InvoiceNumber,
+    string? InvoiceDate,
+    string? DueDate,
+    string? Currency,
+    decimal? TotalAmount,
+    float Confidence,
+    string Summary,
+    DateTimeOffset CreatedAt);
+
+public record ContractAnalysisDto(
+    string Id,
+    string? ContractType,
+    List<string> Parties,
+    string? EffectiveDate,
+    string? ExpirationDate,
+    string? RenewalClause,
+    List<string> KeyObligations,
+    float Confidence,
+    string Reasoning,
+    DateTimeOffset CreatedAt);
+
+// ── Workflow status (GET /workflows/{id}/status) ──────────────────────────────
 
 public record WorkflowStatusDto(
     string WorkflowId,
@@ -48,14 +97,14 @@ public record WorkflowStatusDto(
     DateTimeOffset StartedAt,
     DateTimeOffset? CompletedAt);
 
-// ── Execute response (POST /api/v1/workflows/{workflowId}/execute) ────────────
+// ── Execute (POST /workflows/{id}/execute) ────────────────────────────────────
 
 public record WorkflowExecuteResponse(
     string WorkflowId,
     string Status,
     string Message);
 
-// ── Agent execution list (GET /api/v1/workflows/{workflowId}/executions) ──────
+// ── Agent execution list (GET /workflows/{id}/executions) ─────────────────────
 
 public record AgentExecutionListResponse(
     string WorkflowId,

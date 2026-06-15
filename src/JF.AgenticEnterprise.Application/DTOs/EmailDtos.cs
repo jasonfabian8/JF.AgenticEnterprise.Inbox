@@ -1,3 +1,4 @@
+// InvoiceAnalysisDto and ContractAnalysisDto are defined in WorkflowDtos.cs (same namespace)
 namespace JF.AgenticEnterprise.Application.DTOs;
 
 // ── Ingest ──────────────────────────────────────────────────────────────────
@@ -62,8 +63,12 @@ public record EmailDetailDto(
     bool HumanReviewed,
     ClassificationDto? Classification,
     List<AttachmentDto> Attachments,
+    // Sprint 1 (attachment-based extraction — kept for backward compat)
     InvoiceExtractionDto? InvoiceExtraction,
-    ContractExtractionDto? ContractExtraction);
+    ContractExtractionDto? ContractExtraction,
+    // Sprint 2 (agent-based analysis)
+    InvoiceAnalysisDto? InvoiceAnalysis,
+    ContractAnalysisDto? ContractAnalysis);
 
 public record ClassificationDto(
     string CategoryType,
