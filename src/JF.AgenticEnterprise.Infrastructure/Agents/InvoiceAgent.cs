@@ -38,14 +38,17 @@ public sealed class InvoiceAgent : IInvoiceAgent
         }
         """;
 
+    private readonly string _agentVersion;
+
     public InvoiceAgent(
         IAgentRuntime runtime,
         AiProviderOptions options,
         ILogger<InvoiceAgent> logger)
     {
-        _runtime = runtime;
-        _agentId = options.InvoiceExtractionAgentId;
-        _logger = logger;
+        _runtime      = runtime;
+        _agentId      = options.InvoiceAgentId;
+        _agentVersion = options.InvoiceAgentVersion;
+        _logger       = logger;
     }
 
     public async Task<InvoiceAnalysisResult> ExtractAsync(
@@ -58,7 +61,7 @@ public sealed class InvoiceAgent : IInvoiceAgent
             "InvoiceAgent invoking {AgentId} for email {EmailId}", _agentId, request.EmailId);
 
         var response = await _runtime.InvokeAsync(
-            new AgentRuntimeRequest(_agentId, SystemPrompt, userMessage), ct);
+            new AgentRuntimeRequest(_agentId, _agentVersion, SystemPrompt, userMessage), ct);
 
         var result = ParseResponse(response.Content);
 

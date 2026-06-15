@@ -12,11 +12,13 @@ public interface IAgentRuntime
 }
 
 /// <summary>
-/// Describes a single agent invocation. AgentId is the logical name of the agent
-/// (e.g. "Classification-Agent") as configured in Azure AI Foundry.
+/// Describes a single agent invocation.
+/// AgentId is the Prompt Agent name as deployed in Azure AI Foundry.
+/// AgentVersion targets a specific published version (e.g. "5" for Classification-Agent v5).
 /// </summary>
 public sealed record AgentRuntimeRequest(
     string AgentId,
+    string AgentVersion,
     string SystemPrompt,
     string UserMessage);
 

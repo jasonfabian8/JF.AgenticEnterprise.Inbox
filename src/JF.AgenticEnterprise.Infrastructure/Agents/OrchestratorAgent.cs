@@ -39,14 +39,17 @@ public sealed class OrchestratorAgent : IOrchestratorAgent
         }
         """;
 
+    private readonly string _agentVersion;
+
     public OrchestratorAgent(
         IAgentRuntime runtime,
         AiProviderOptions options,
         ILogger<OrchestratorAgent> logger)
     {
-        _runtime = runtime;
-        _agentId = options.OrchestratorAgentId;
-        _logger = logger;
+        _runtime      = runtime;
+        _agentId      = options.OrchestratorAgentId;
+        _agentVersion = options.OrchestratorAgentVersion;
+        _logger       = logger;
     }
 
     public async Task<OrchestratorResult> DecideAsync(
@@ -70,7 +73,7 @@ public sealed class OrchestratorAgent : IOrchestratorAgent
             _agentId, request.ClassificationCategory);
 
         var response = await _runtime.InvokeAsync(
-            new AgentRuntimeRequest(_agentId, SystemPrompt, userMessage), ct);
+            new AgentRuntimeRequest(_agentId, _agentVersion, SystemPrompt, userMessage), ct);
 
         var result = ParseResponse(response.Content);
 

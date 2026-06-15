@@ -1,18 +1,27 @@
-using Azure;
-using Azure.AI.Inference;
+#pragma warning disable OPENAI001
+
+using Azure.AI.Extensions.OpenAI;
+using Azure.Identity;
 using JF.AgenticEnterprise.Application.Agents;
 using Microsoft.Extensions.Logging;
+using OpenAI.Responses;
 
 namespace JF.AgenticEnterprise.Infrastructure.Agents;
 
 /// <summary>
-/// Routes agent invocations to Azure AI Foundry via the Azure AI Inference SDK.
-/// The project endpoint acts as the base URL; each AgentId becomes the model parameter,
-/// which Foundry uses to route the request to the correct deployed agent.
+/// Invokes Azure AI Foundry Prompt Agents via ProjectResponsesClient (Azure.AI.Extensions.OpenAI).
+///
+/// Auth: DefaultAzureCredential
+///   - Local dev  → `az login` (Azure CLI credential is picked automatically)
+///   - Azure host → Managed Identity (no extra config)
+///
+/// The AgentReference(name, version) pins the exact published snapshot in Foundry,
+/// so a new version publish doesn't silently change behavior.
 /// </summary>
 public sealed class AzureAIFoundryAgentRuntime : IAgentRuntime
 {
-    private readonly ChatCompletionsClient _client;
+    private readonly Uri _endpoint;
+    private readonly DefaultAzureCredential _credential;
     private readonly ILogger<AzureAIFoundryAgentRuntime> _logger;
 
     public AzureAIFoundryAgentRuntime(
@@ -21,19 +30,11 @@ public sealed class AzureAIFoundryAgentRuntime : IAgentRuntime
     {
         if (string.IsNullOrWhiteSpace(options.Endpoint))
             throw new InvalidOperationException(
-                "AiProvider:Endpoint is required for AzureAIFoundry. " +
-                "Set it in appsettings.Development.json.");
+                "AiProvider:Endpoint is required. Set it in appsettings.Development.json.");
 
-        if (string.IsNullOrWhiteSpace(options.ApiKey))
-            throw new InvalidOperationException(
-                "AiProvider:ApiKey is required for AzureAIFoundry. " +
-                "Set it in appsettings.Development.json.");
-
-        _client = new ChatCompletionsClient(
-            new Uri(options.Endpoint),
-            new AzureKeyCredential(options.ApiKey));
-
-        _logger = logger;
+        _endpoint   = new Uri(options.Endpoint);
+        _credential = new DefaultAzureCredential();
+        _logger     = logger;
     }
 
     /// <inheritdoc />
@@ -41,59 +42,54 @@ public sealed class AzureAIFoundryAgentRuntime : IAgentRuntime
         AgentRuntimeRequest request,
         CancellationToken ct = default)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(request.AgentId, nameof(request.AgentId));
-        ArgumentException.ThrowIfNullOrWhiteSpace(request.UserMessage, nameof(request.UserMessage));
+        ArgumentException.ThrowIfNullOrWhiteSpace(request.AgentId,      nameof(request.AgentId));
+        ArgumentException.ThrowIfNullOrWhiteSpace(request.AgentVersion, nameof(request.AgentVersion));
+        ArgumentException.ThrowIfNullOrWhiteSpace(request.UserMessage,  nameof(request.UserMessage));
 
         var started = DateTimeOffset.UtcNow;
 
         _logger.LogDebug(
-            "Invoking Foundry agent {AgentId} | message length: {Len}",
-            request.AgentId, request.UserMessage.Length);
+            "Invoking Foundry Prompt Agent {AgentId} v{Version}",
+            request.AgentId, request.AgentVersion);
 
-        var options = new ChatCompletionsOptions
+        // AgentReference targets the specific published version in Foundry.
+        // 4th param (conversationId) is null — stateless invocation per request.
+        var agentRef = new AgentReference(name: request.AgentId, version: request.AgentVersion);
+        var responseClient = new ProjectResponsesClient(_endpoint, _credential, agentRef, null!, null);
+
+        var responseOptions = new CreateResponseOptions
         {
-            Model = request.AgentId,
-            Messages =
-            {
-                new ChatRequestSystemMessage(request.SystemPrompt),
-                new ChatRequestUserMessage(request.UserMessage),
-            },
+            InputItems = { ResponseItem.CreateUserMessageItem(request.UserMessage) },
         };
 
-        Response<ChatCompletions> response;
+        ResponseResult result;
         try
         {
-            response = await _client.CompleteAsync(options, ct);
+            result = await responseClient.CreateResponseAsync(responseOptions, ct);
         }
-        catch (RequestFailedException rfex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            _logger.LogError(rfex,
-                "Foundry agent {AgentId} returned HTTP {Status}: {Message}",
-                request.AgentId, rfex.Status, rfex.Message);
-            throw new AgentInvocationException(request.AgentId, rfex.Status, rfex.Message, rfex);
+            _logger.LogError(ex,
+                "Foundry Prompt Agent {AgentId} v{Version} failed",
+                request.AgentId, request.AgentVersion);
+            throw new AgentInvocationException(request.AgentId, 0, ex.Message, ex);
         }
+
+        var content = result.GetOutputText()
+            ?? throw new AgentInvocationException(
+                request.AgentId, 0, "Agent returned null output text.");
 
         var latency = DateTimeOffset.UtcNow - started;
-        var completions = response.Value;
-
-        var content = completions.Content
-            ?? throw new AgentInvocationException(
-                request.AgentId, 0,
-                "Agent returned null content. Check the agent configuration in Foundry.");
-
-        var usage = new AgentRuntimeUsage(
-            PromptTokens: completions.Usage?.PromptTokens ?? 0,
-            CompletionTokens: completions.Usage?.CompletionTokens ?? 0);
 
         _logger.LogInformation(
-            "Foundry agent {AgentId} completed | latency: {LatencyMs}ms | tokens: {Total}",
-            request.AgentId, (int)latency.TotalMilliseconds, usage.TotalTokens);
+            "Foundry Agent {AgentId} v{Version} completed | latency: {LatencyMs}ms",
+            request.AgentId, request.AgentVersion, (int)latency.TotalMilliseconds);
 
         return new AgentRuntimeResponse(
-            Content: content,
-            FinishReason: completions.FinishReason?.ToString(),
-            Usage: usage,
-            Latency: latency);
+            Content:      content,
+            FinishReason: "stop",
+            Usage:        new AgentRuntimeUsage(0, 0),
+            Latency:      latency);
     }
 }
 
@@ -103,13 +99,13 @@ public sealed class AzureAIFoundryAgentRuntime : IAgentRuntime
 /// </summary>
 public sealed class AgentInvocationException : Exception
 {
-    public string AgentId { get; }
-    public int HttpStatus { get; }
+    public string AgentId   { get; }
+    public int    HttpStatus { get; }
 
     public AgentInvocationException(string agentId, int httpStatus, string message, Exception? inner = null)
         : base($"Agent '{agentId}' invocation failed (HTTP {httpStatus}): {message}", inner)
     {
-        AgentId = agentId;
+        AgentId    = agentId;
         HttpStatus = httpStatus;
     }
 }

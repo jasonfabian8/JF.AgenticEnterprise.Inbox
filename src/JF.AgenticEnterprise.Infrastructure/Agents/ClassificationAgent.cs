@@ -40,14 +40,17 @@ public sealed class ClassificationAgent : IClassificationAgent
         }
         """;
 
+    private readonly string _agentVersion;
+
     public ClassificationAgent(
         IAgentRuntime runtime,
         AiProviderOptions options,
         ILogger<ClassificationAgent> logger)
     {
-        _runtime = runtime;
-        _agentId = options.ClassificationAgentId;
-        _logger = logger;
+        _runtime      = runtime;
+        _agentId      = options.ClassificationAgentId;
+        _agentVersion = options.ClassificationAgentVersion;
+        _logger       = logger;
     }
 
     /// <inheritdoc />
@@ -59,9 +62,10 @@ public sealed class ClassificationAgent : IClassificationAgent
         var userMessage = BuildUserMessage(subject, bodyPlainText);
 
         var request = new AgentRuntimeRequest(
-            AgentId: _agentId,
+            AgentId:      _agentId,
+            AgentVersion: _agentVersion,
             SystemPrompt: SystemPrompt,
-            UserMessage: userMessage);
+            UserMessage:  userMessage);
 
         _logger.LogDebug(
             "ClassificationAgent invoking agent {AgentId} for subject: {Subject}",
