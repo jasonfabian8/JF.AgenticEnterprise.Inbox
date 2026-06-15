@@ -50,6 +50,7 @@ public static class WorkflowResultStatus
 {
     public const string Completed = "COMPLETED";
     public const string CompletedExtracted = "COMPLETED_EXTRACTED";
+    public const string CompletedHuman = "COMPLETED_HUMAN";
     public const string AwaitingReview = "AWAITING_REVIEW";
     public const string Failed = "FAILED";
 }

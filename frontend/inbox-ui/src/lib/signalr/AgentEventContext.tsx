@@ -151,19 +151,27 @@ export function AgentEventProvider({ children }: Readonly<{ children: ReactNode 
       .configureLogging(signalR.LogLevel.Warning)
       .build()
 
-    connection.onreconnecting(() => setIsConnected(false))
-    connection.onreconnected(() => setIsConnected(true))
-    connection.onclose(() => setIsConnected(false))
+    let cancelled = false
 
-    connection
-      .start()
-      .then(() => setIsConnected(true))
-      .catch(err => console.error('[SignalR] Connection failed:', err))
+    connection.onreconnecting(() => { if (!cancelled) setIsConnected(false) })
+    connection.onreconnected(() => { if (!cancelled) setIsConnected(true) })
+    connection.onclose(() => { if (!cancelled) setIsConnected(false) })
 
     connectionRef.current = connection
 
+    connection
+      .start()
+      .then(() => { if (!cancelled) setIsConnected(true) })
+      .catch(err => {
+        // Suppress errors caused by StrictMode cleanup stopping the connection
+        // before negotiation completes — not a real failure in that case.
+        if (!cancelled) console.error('[SignalR] Connection failed:', err)
+      })
+
     return () => {
-      connection.stop()
+      cancelled = true
+      connectionRef.current = null
+      connection.stop().catch(() => { /* ignore stop errors on cleanup */ })
     }
   }, [])
 

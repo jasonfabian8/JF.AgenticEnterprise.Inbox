@@ -21,10 +21,17 @@ const ENTRY_COLORS: Record<string, string> = {
   WORKFLOW:        'bg-gray-100 text-gray-700 border-gray-200',
 }
 
+function confidenceColor(pct: number): string {
+  if (pct >= 85) return 'bg-green-100 text-green-700'
+  if (pct >= 70) return 'bg-yellow-100 text-yellow-700'
+  return 'bg-red-100 text-red-700'
+}
+
 function TimelineEntry({ entry }: Readonly<{ entry: ReasoningTimelineEntryDto }>) {
   const icon   = ENTRY_ICONS[entry.entryType]  ?? '•'
   const colors = ENTRY_COLORS[entry.entryType] ?? 'bg-gray-100 text-gray-700 border-gray-200'
-  const pct    = entry.confidence !== null ? Math.round(entry.confidence * 100) : null
+  const rawPct = entry.confidence !== null ? Math.round(entry.confidence * 100) : null
+  const pct    = rawPct !== null && Number.isFinite(rawPct) ? rawPct : null
 
   return (
     <div className="flex gap-3">
@@ -50,10 +57,7 @@ function TimelineEntry({ entry }: Readonly<{ entry: ReasoningTimelineEntryDto }>
 
         <div className="flex items-center gap-2 mt-1.5 flex-wrap">
           {pct !== null && (
-            <span className={`text-xs px-1.5 py-0.5 rounded font-mono ${
-              pct >= 85 ? 'bg-green-100 text-green-700' :
-              pct >= 70 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'
-            }`}>
+            <span className={`text-xs px-1.5 py-0.5 rounded font-mono ${confidenceColor(pct)}`}>
               {pct}%
             </span>
           )}
