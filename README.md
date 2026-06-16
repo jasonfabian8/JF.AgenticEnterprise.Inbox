@@ -6,7 +6,7 @@
 
 **Microsoft Agents League · Reasoning Agents Challenge**
 
-[📖 User Guide](docs/user-guide.md) · [⚙️ Configuration](docs/configuration.md) · [📐 Architecture](docs/sad/00-sad-index.md) · [📋 Product Docs](docs/00-index.md)
+[▶️ Watch Demo](https://youtu.be/nckqYqfNBtM) · [📖 User Guide](docs/user-guide.md) · [⚙️ Configuration](docs/configuration.md) · [📐 Architecture](docs/sad/00-sad-index.md) · [📋 Product Docs](docs/00-index.md)
 
 </div>
 
