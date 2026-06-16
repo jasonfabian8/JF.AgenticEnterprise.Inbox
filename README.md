@@ -1,422 +1,246 @@
-# Agentic Enterprise Inbox
+<div align="center">
 
-> Transforming emails into autonomous business actions through collaborative AI agents.
+# 🤖 Agentic Enterprise Inbox
 
-## Overview
+### An AI agent workforce that reads your emails, reasons about them, and acts — so your team doesn't have to.
 
-Agentic Enterprise Inbox is a multi-agent AI system that transforms incoming emails and attachments into structured business processes.
+**Microsoft Agents League · Reasoning Agents Challenge**
 
-Instead of relying on employees to manually review, classify, route, and process communications, a specialized AI workforce collaborates to understand content, extract business information, evolve organizational knowledge, and initiate actions.
+[📖 User Guide](docs/user-guide.md) · [⚙️ Configuration](docs/configuration.md) · [📐 Architecture](docs/sad/00-sad-index.md) · [📋 Product Docs](docs/00-index.md)
 
-The system demonstrates how autonomous agents can reason together, challenge assumptions, involve humans when needed, and continuously improve organizational understanding.
+</div>
+
+---
+
+![Workflow in action — Classification Agent (98% confidence) → Orchestrator → Human Review → Invoice Agent (100%)](docs/images/email-detailed.png)
+
+> A real email processed end-to-end: the Classification Agent identified it as an Invoice at **98% confidence**, the Orchestrator routed it through Human Review, and the Invoice Agent extracted all structured data at **100% confidence** — automatically.
 
 ---
 
 ## The Problem
 
-Organizations receive hundreds or thousands of emails every day.
+Organizations receive hundreds of business emails every day — invoices, contracts, bank statements, proposals, compliance documents.
 
-These emails often contain:
+Most still depend on people to read each one, decide what it is, extract the relevant data, and kick off the right business process. That is slow, error-prone, and impossible to scale.
 
-* Invoices
-* Contracts
-* Bank statements
-* Customer requests
-* Quotations
-* Compliance documents
-* Operational communications
-
-Most organizations still depend on people to:
-
-1. Read emails
-2. Classify content
-3. Extract information
-4. Route requests
-5. Launch business processes
-
-This creates operational bottlenecks, delays, and knowledge silos.
+**Static rules and single-model classifiers don't work.** Business language is ambiguous. New document types appear. Edge cases accumulate.
 
 ---
 
-## Our Solution
+## The Solution
 
-Agentic Enterprise Inbox replaces manual email triage with a collaborative AI workforce.
+Agentic Enterprise Inbox replaces manual email triage with a **collaborative AI agent workforce**.
 
-Each incoming email becomes a reasoning task executed by specialized agents.
+Every incoming email triggers a multi-agent reasoning pipeline:
 
-The result is an autonomous workflow capable of understanding communications, extracting business knowledge, and transforming information into actions.
-
----
-
-# Why This Project Matters
-
-Most email automation systems rely on static rules or single-model classification.
-
-Agentic Enterprise Inbox introduces:
-
-* Multi-agent reasoning
-* Dynamic taxonomy evolution
-* Human-in-the-loop governance
-* Explainable decision making
-* Organizational knowledge growth
-
-The system does not simply classify emails.
-
-It learns how the organization communicates.
-
----
-
-# Architecture
-
-## High-Level Flow
-
-```text
+```
 Incoming Email
-        │
-        ▼
-Orchestrator Agent
-        │
- ┌──────┼─────────┐
- ▼      ▼         ▼
-Classification  Document  Knowledge
-Agent           Agent     Agent
-        │
- ┌──────┼───────────────┐
- ▼      ▼               ▼
-Invoice Contract    Statement
-Agent   Agent       Agent
-        │
-        ▼
-Taxonomy Evolution Agent
-        │
-        ▼
-Human Collaboration Agent
-        │
-        ▼
-Business Action
+      │
+      ▼
+Classification Agent ──── understands business intent (Invoice, Contract, etc.)
+      │
+      ▼
+Orchestrator Agent ──────── selects the right specialist and explains why
+      │
+   ┌──┴──────────────┐
+   ▼                 ▼
+Invoice Agent    Contract Agent ───── extracts structured data with confidence scores
+                     │
+                     ▼
+           Taxonomy Evolution Agent ── proposes new categories when patterns emerge
+                     │
+                     ▼
+           Human Collaboration Agent ─ escalates only what requires human judgment
+                     │
+                     ▼
+              Business Action
 ```
 
----
-
-# Agent Workforce
-
-## Orchestrator Agent
-
-Coordinates the complete workflow.
-
-Responsibilities:
-
-* Receives incoming emails
-* Selects specialized agents
-* Maintains workflow state
-* Consolidates conclusions
-* Produces final outcomes
+The result: **autonomous, explainable, human-supervised processing** — at any scale.
 
 ---
 
-## Classification Agent
+## What Makes This Different
 
-Determines the business intent of the email.
-
-Examples:
-
-* Invoice
-* Contract
-* Quotation
-* Customer Request
-* Bank Statement
-* Information Request
+| Capability | How it works |
+|-----------|-------------|
+| **Multi-agent reasoning** | 7 specialized agents collaborate, challenge each other, and reach consensus |
+| **Explainable decisions** | Every classification includes the agent's full reasoning chain and confidence score |
+| **Self-evolving taxonomy** | The system proposes new business categories when it detects emerging patterns |
+| **Human-in-the-loop** | Humans are involved only when confidence is low or agents disagree — never for routine work |
+| **Live visual workflow** | Every email shows a real-time graph of exactly which agents ran and what they concluded |
+| **Organizational learning** | Each decision makes the next one smarter |
 
 ---
 
-## Document Understanding Agent
+## Live Screenshots
 
-Analyzes attachments and identifies document types.
+<table>
+<tr>
+<td width="50%">
 
-Supported formats:
+**Inbox — all emails and their real-time status**
 
-* PDF
-* Images
-* Word Documents
-* Excel Files
+![Inbox](docs/images/inbox.png)
 
----
+</td>
+<td width="50%">
 
-## Invoice Agent
+**Dashboard — operations at a glance**
 
-Extracts:
+![Dashboard](docs/images/Dashboard.png)
 
-* Supplier
-* Invoice Number
-* Amount
-* Due Date
-* Taxes
+</td>
+</tr>
+<tr>
+<td width="50%">
 
----
+**Agent Activity — what each agent did and how fast**
 
-## Contract Agent
+![Agent Activity](docs/images/AgentActivity.png)
 
-Extracts:
+</td>
+<td width="50%">
 
-* Parties
-* Validity Dates
-* Renewal Clauses
-* Obligations
-* Risks
+**Document Understanding — knowledge evolution across pipeline phases**
 
----
+![Document Understanding](docs/images/DocumentAnalysis.png)
 
-## Statement Agent
+</td>
+</tr>
+<tr>
+<td width="50%">
 
-Extracts:
+**Reasoning Timeline — full audit trail of every agent decision**
 
-* Transactions
-* Balances
-* Financial Activity
+![Reasoning Timeline](docs/images/ReasoningTimeline.png)
 
----
+</td>
+<td width="50%">
 
-## Knowledge Agent
+**Human Review Queue — only what actually needs a human**
 
-Builds organizational memory by identifying:
+![Human Review Queue](docs/images/Reviews.png)
 
-* Recurring suppliers
-* Business relationships
-* Communication patterns
-* Frequently occurring workflows
+</td>
+</tr>
+</table>
 
 ---
 
-## Taxonomy Evolution Agent
+## Real Example
 
-One of the project's key innovations.
+An invoice email arrives from Global Supplier Inc.
 
-Instead of relying on predefined categories, the system continuously evaluates incoming communications and user corrections.
+| Step | Agent | Output |
+|------|-------|--------|
+| 1 | Classification Agent | Category: **Invoice** · Confidence: **98%** |
+| 2 | Orchestrator Agent | Route to: **Invoice Agent** · Reason: explicit invoice signals, high confidence |
+| 3 | Human Collaboration Agent | Escalated for confirmation (configured threshold) |
+| 4 | Human reviewer | **Approved** in 4 seconds |
+| 5 | Invoice Agent | Supplier: Global Supplier Inc. · Invoice #GS-2024-00847 · Amount: **USD 20,880.00** · Due: 04/15/2024 · Confidence: **100%** |
 
-When a new business concept emerges, the agent proposes a new category.
+Total elapsed time: **~15 seconds** from email arrival to structured business data — including the human review step.
 
-Example:
+---
 
-```text
-Existing Categories
+## Hackathon Criteria Alignment
 
-- Contract
-- Invoice
-- Request
+| Criterion | How we address it |
+|-----------|------------------|
+| **Multi-agent collaboration** | 7 specialized agents with defined roles, communication protocols, and conflict resolution |
+| **Reasoning transparency** | Full reasoning chain + confidence score on every decision, visible in the UI |
+| **Human-in-the-loop** | Explicit escalation with structured review UI; humans control thresholds |
+| **Dynamic learning** | Taxonomy Evolution Agent learns from human corrections and proposes new categories |
+| **Orchestration** | Orchestrator Agent manages state, routing decisions, and agent lifecycle |
 
-Detected Pattern
+---
 
-- Contract Renewal
+## Agent Workforce
 
-Suggested Action
+| Agent | Role |
+|-------|------|
+| **Orchestrator Agent** | Coordinates the pipeline; selects and sequences specialized agents |
+| **Classification Agent** | Identifies the business type of every incoming email |
+| **Invoice Agent** | Extracts supplier, invoice number, amounts, dates, taxes |
+| **Contract Agent** | Extracts parties, dates, obligations, renewal clauses, risk flags |
+| **Taxonomy Evolution Agent** | Detects emerging patterns and proposes new email categories |
+| **Human Collaboration Agent** | Decides when and how to involve a human reviewer |
+| **Human Reviewer** | Approves, corrects, or rejects agent decisions when called upon |
 
-Create new category:
-Contract Renewal
+---
+
+## Technology Stack
+
+| Layer | Technology |
+|-------|-----------|
+| AI Agents | Azure AI Foundry Prompt Agents (gpt-4.1-mini) |
+| Backend | .NET 10 · Clean Architecture · SignalR |
+| Data | SQLite · Entity Framework Core 9 |
+| Frontend | React 19 · TanStack Query · ReactFlow |
+| Auth (local) | Azure DefaultAzureCredential (`az login`) |
+| Auth (prod) | Managed Identity + Azure Key Vault |
+| Dev tooling | GitHub Copilot |
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+- .NET 10 SDK
+- Node.js 20+
+- Azure AI Foundry project with agents deployed
+- `az login` (uses DefaultAzureCredential — no API key stored locally)
+
+### 1. Configure the API
+
+Copy the template and fill in your Azure AI Foundry endpoint and agent IDs:
+
+```bash
+cp src/JF.AgenticEnterprise.Api/appsettings.Development.json.example \
+   src/JF.AgenticEnterprise.Api/appsettings.Development.json
+# Edit the file — it is gitignored, never committed
 ```
 
-This allows the organization's knowledge model to evolve over time.
+See **[docs/configuration.md](docs/configuration.md)** for all keys, defaults, and production secrets setup with Azure Key Vault.
 
----
+### 2. Run the backend
 
-## Human Collaboration Agent
-
-Unlike traditional assistants, this agent proactively starts conversations.
-
-Examples:
-
-* Request clarification
-* Validate uncertain classifications
-* Approve new categories
-* Resolve agent disagreements
-
-Humans remain in control while minimizing manual effort.
-
----
-
-# Multi-Agent Reasoning
-
-The system demonstrates collaborative reasoning through:
-
-## Agent Collaboration
-
-Agents exchange observations before producing conclusions.
-
-Example:
-
-```text
-Classification Agent:
-Category = Contract
-
-Contract Agent:
-Insufficient contractual clauses detected
-
-Knowledge Agent:
-Similar documents historically classified as Commercial Proposal
-
-Final Recommendation:
-Commercial Proposal
+```bash
+cd src/JF.AgenticEnterprise.Api
+dotnet run
+# API starts at https://localhost:5001
 ```
 
----
+### 3. Run the frontend
 
-## Human-In-The-Loop
-
-When confidence is low:
-
-```text
-Taxonomy Agent:
-Potential new category detected
-
-Suggested Category:
-Vendor Onboarding Request
-
-Confidence:
-82%
-
-Request human validation
+```bash
+cd frontend/inbox-ui
+npm install
+npm run dev
+# UI starts at http://localhost:5173
 ```
 
----
+### 4. Send your first email
 
-## Explainability
-
-Every decision contains:
-
-* Agent involved
-* Evidence used
-* Confidence score
-* Final reasoning trace
+Open the **Simulator** tab, click **Invoice**, then **Send to Inbox →**. Watch the Workflow Graph animate as each agent processes the email in real time.
 
 ---
 
-# Microsoft Hackathon Alignment
+## Documentation
 
-This project directly addresses the goals of the Reasoning Agents challenge.
-
-## Reasoning & Multi-Step Thinking
-
-* Multi-agent orchestration
-* Agent collaboration
-* Conflict resolution
-* Dynamic decision making
-
-## Creativity & Originality
-
-* Self-evolving taxonomy
-* Proactive human interaction
-* Organizational learning
-
-## User Experience
-
-* Visual agent workflow
-* Transparent reasoning
-* Explainable outcomes
-
-## Reliability & Safety
-
-* Human approval workflows
-* Confidence thresholds
-* Traceable decisions
+| Document | Description |
+|----------|-------------|
+| [User Guide](docs/user-guide.md) | Full walkthrough of every screen with screenshots |
+| [Configuration](docs/configuration.md) | All config keys, local setup, and production secrets management |
+| [System Architecture](docs/sad/00-sad-index.md) | Software Architecture Document |
 
 ---
 
-# Example Scenario
+<div align="center">
 
-### Incoming Email
+Built for the **Microsoft Agents League — Reasoning Agents Challenge**
 
-Subject:
-
-```text
-Invoice INV-2026-00458
-```
-
-Attachment:
-
-```text
-invoice.pdf
-```
-
-### Agent Workflow
-
-```text
-Orchestrator Agent
-      ↓
-Classification Agent
-      ↓
-Document Understanding Agent
-      ↓
-Invoice Agent
-      ↓
-Knowledge Agent
-      ↓
-Business Action
-```
-
-### Result
-
-```text
-Document Type:
-Invoice
-
-Supplier:
-ABC Energy
-
-Amount:
-$1,250.00
-
-Due Date:
-2026-06-30
-
-Recommendation:
-Register payable obligation
-
-Confidence:
-96%
-```
-
----
-
-# Future Vision
-
-Agentic Enterprise Inbox is the first step toward a fully autonomous enterprise operations layer.
-
-Instead of employees managing inboxes, specialized AI agents continuously transform communications into structured business outcomes.
-
-The inbox becomes the entry point to an intelligent, self-improving digital workforce.
-
----
-
-# Configuration
-
-To run the system you need to configure the Azure AI Foundry connection and agent identifiers.
-
-See **[docs/configuration.md](docs/configuration.md)** for:
-
-* All configuration keys and their default values
-* How to set up `appsettings.Development.json` locally (excluded from git)
-* Production secrets management with **Azure Key Vault + Managed Identity**
-* Alternatives: .NET User Secrets and GitHub Actions secrets
-
-> Never commit API keys or Azure endpoints to the repository.  
-> The file `appsettings.Development.json` is listed in `.gitignore` for this reason.
-
-See also **[docs/user-guide.md](docs/user-guide.md)** for a full walkthrough of every screen with screenshots.
-
----
-
-# Technology Stack
-
-* GitHub Copilot
-* Azure OpenAI
-* Microsoft Foundry
-* MCP (Model Context Protocol)
-* .NET
-* Semantic Kernel
-* React / Angular
-* Docker
-
----
-
-# Team
-
-Built for the Microsoft Agents League – Reasoning Agents Challenge.
+</div>
